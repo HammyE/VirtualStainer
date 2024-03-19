@@ -4,6 +4,39 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 
+def gaussian(x, amplitude, mean, stddev):
+    return amplitude * np.exp(-((x - mean) / 4 / stddev) ** 2)
+
+def get_blur(img, mask):
+    img = cv2.bitwise_and(img, img, mask=mask)
+    return cv2.Laplacian(img, cv2.CV_64F).var()
+
+
+def equalize(sample_img, param):
+    '''
+    A method to equalize the image.
+    :param sample_img: np.array, image to be equalized
+    :param param: tuple, equalization parameters
+    :return: np.array, equalized image
+    '''
+    min_brightness, max_brightness = param
+    sample_img = (sample_img - min_brightness) * (255.0 / (max_brightness - min_brightness))
+    return sample_img
+
+
+def get_equalization_params(img_set):
+    '''
+    A method to get the equalization parameters for a plate.
+    :return:
+    '''
+    ## TODO : Implement with quantiles
+
+    min_brightness = np.min([np.min(np.array(img)) for img in img_set])
+    max_brightness = np.max([np.max(np.array(img)) for img in img_set])
+
+    return min_brightness, max_brightness
+
+
 class MaximumIntensityProjection(object):
     """MaximumIntensityProjection"""
 
@@ -222,24 +255,4 @@ class MaximumIntensityProjection(object):
         corrected_image_with_uniform_background = cv2.add(corrected_image, uniform_background)
 
         return corrected_image_with_uniform_background
-
-    def get_equalization_params(self, img_set):
-        '''
-        A method to get the equalization parameters for a plate.
-        :return:
-        '''
-        min_brightness = np.min([np.min(np.array(img)) for img in img_set])
-        max_brightness = np.max([np.max(np.array(img)) for img in img_set])
-        return min_brightness, max_brightness
-
-    def equalize(self, sample_img, param):
-        '''
-        A method to equalize the image.
-        :param sample_img: np.array, image to be equalized
-        :param param: tuple, equalization parameters
-        :return: np.array, equalized image
-        '''
-        min_brightness, max_brightness = param
-        sample_img = (sample_img - min_brightness) * (255.0 / (max_brightness - min_brightness))
-        return sample_img
 
