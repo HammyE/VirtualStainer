@@ -59,6 +59,7 @@ class HarmonyDataset(Dataset):
         self.depths = {}
         self.masks = {}
         self.potential_centers = {}
+        self.depth_pool = {}
 
         if self.debug:
             global plt
@@ -109,6 +110,7 @@ class HarmonyDataset(Dataset):
 
             # change depths to new min and max
             self.depths[well] = np.arange(min_depth, max_depth + 1)
+            self.depth_pool[well] = self.depths[well].tolist()
 
 
     def find_depth_and_mask(self, measurement, well):
@@ -352,8 +354,12 @@ class HarmonyDataset(Dataset):
     def __getitem__(self, idx):
         print(f"Getting well... {self.wells[idx]}")
         well = self.wells[idx]
-        depth_idx = np.random.randint(0, len(self.depths[well]))
-        depth = self.depths[well][depth_idx]
+
+        # To make sure that all the depths of a well are used before repeating
+        if len(self.depth_pool[well]) == 0:
+            self.depth_pool[well] = self.depths[well].tolist()
+        depth = np.random.choice(self.depth_pool[well])
+
         measurement = well.split("f")[0][:-6]
 
         x = torch.tensor(np.zeros((self.picture_batch_size, self.depth_padding*2+1 , self.tile_size, self.tile_size)))
