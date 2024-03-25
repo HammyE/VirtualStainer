@@ -59,7 +59,8 @@ class HarmonyDataset(Dataset):
         self.depths = {}
         self.masks = {}
         self.potential_centers = {}
-        self.depth_pool = {}
+
+        self.len = None
 
         if self.debug:
             global plt
@@ -75,7 +76,7 @@ class HarmonyDataset(Dataset):
             images = os.listdir(os.path.join(root, measurement, "images"))
 
             # Extract the wells from the images
-            print(f"Extracting wells from measurement {measurement}...")
+            if self.debug: print(f"Extracting wells from measurement {measurement}...")
             self.extract_wells(images, measurement)
 
             # set image size
@@ -84,7 +85,7 @@ class HarmonyDataset(Dataset):
             min_pos = tile_size / 2
             max_pos = self.image_size + tile_size / 2
             # define in focus range for each well
-            print(f"Generating samples for measurement {measurement}...")
+            if self.debug: print(f"Generating samples for measurement {measurement}...")
             self.generate_samples(depth_padding, max_pos, measurement, min_pos)
 
     def generate_samples(self, depth_padding, max_pos, measurement, min_pos):
@@ -104,13 +105,17 @@ class HarmonyDataset(Dataset):
             min_depth = self.depths[well][0]
             max_depth = self.depths[well][-1]
             if min_depth - depth_padding < 0:
+                diff = depth_padding - min_depth
                 min_depth = depth_padding
+                max_depth += diff
             if max_depth + depth_padding > len(self.bf_stacks[well]):
+                diff = max_depth - len(self.bf_stacks[well]) + depth_padding
                 max_depth = len(self.bf_stacks[well]) - depth_padding
+                min_depth -= diff
+
 
             # change depths to new min and max
             self.depths[well] = np.arange(min_depth, max_depth + 1)
-            self.depth_pool[well] = self.depths[well].tolist()
 
 
     def find_depth_and_mask(self, measurement, well):
@@ -119,9 +124,9 @@ class HarmonyDataset(Dataset):
         # Check if depths and masks already exist
         if os.path.isfile(os.path.join(self.root, measurement, "masks", well + ".tiff")):
             self.masks[well] = os.path.join(self.root, measurement, "masks", well + ".tiff")
-            print(f"Mask for well {well} already exists.")
+            if self.debug: print(f"Mask for well {well} already exists.")
         else:
-            print(f"Finding potential centers for well {well}...")
+            if self.debug: print(f"Finding potential centers for well {well}...")
             final_mask = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
             for level in self.bf_stacks[well]:
                 img = cv2.imread(level, cv2.IMREAD_GRAYSCALE)
@@ -146,7 +151,7 @@ class HarmonyDataset(Dataset):
 
         if os.path.isfile(os.path.join(self.root, measurement, "depths", well + ".npy")):
             self.depths[well] = np.load(os.path.join(self.root, measurement, "depths", well + ".npy"))
-            print(f"Depths for well {well} already exist.")
+            if self.debug: print(f"Depths for well {well} already exist.")
         else:
             blur_list = []
             mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
@@ -168,10 +173,10 @@ class HarmonyDataset(Dataset):
             np.save(os.path.join(self.root, measurement, "depths", well + ".npy"), self.depths[well])
 
             if self.debug:
-                print(f"Plotting focus curve for well {well}...")
-                print(f"mu: {popt[1]}")
-                print(f"sigma: {popt[2]}")
-                print(f"amplitude: {popt[0]}")
+                if self.debug: print(f"Plotting focus curve for well {well}...")
+                if self.debug: print(f"mu: {popt[1]}")
+                if self.debug: print(f"sigma: {popt[2]}")
+                if self.debug: print(f"amplitude: {popt[0]}")
 
                 plt.plot(x, y, 'b-', label='data')
                 plt.plot(x, gaussian(x, *popt), 'r-', label='fit')
@@ -187,7 +192,7 @@ class HarmonyDataset(Dataset):
                 plt.xticks([min, max])
 
                 plt.show()
-                print(self.depths[well])
+                if self.debug: print(self.depths[well])
 
                 # Show 16 images with the highest focus, evenly spaced in the list
                 n_layers = len(self.bf_stacks[well])
@@ -291,14 +296,14 @@ class HarmonyDataset(Dataset):
 
     def load_equalization(self, measurement):
         if os.path.exists(os.path.join(self.root, measurement, "equalization")):
-            print("Equalization folder exists.")
+            if self.debug: print("Equalization folder exists.")
         else:
             os.makedirs(os.path.join(self.root, measurement, "equalization"))
-            print("Equalization folder created.")
+            if self.debug: print("Equalization folder created.")
         plate = os.path.dirname(os.path.join(self.root, measurement, "images")).replace("dataset/", "").replace(
             "/images", "")
         if os.path.isfile(os.path.join(self.root, measurement, "equalization", "equalization_params_brightfield.npy")):
-            print("Equalization params already exist.")
+            if self.debug: print("Equalization params already exist.")
 
             bf_params = np.load(
                 os.path.join(self.root, measurement, "equalization", "equalization_params_brightfield.npy"),
@@ -315,8 +320,8 @@ class HarmonyDataset(Dataset):
 
         else:
             # get params and save them
-            print("Equalization params do not exist.")
-            print("Getting equalization params...")
+            if self.debug: print("Equalization params do not exist.")
+            if self.debug: print("Getting equalization params...")
             all_images_brightfield = []
             all_images_dead = []
             all_images_live = []
@@ -337,7 +342,7 @@ class HarmonyDataset(Dataset):
             self.equalization_params_dead[plate] = get_equalization_params(all_images_dead)
             self.equalization_params_live[plate] = get_equalization_params(all_images_live)
 
-            print("Saving equalization params...")
+            if self.debug: print("Saving equalization params...")
             bf_params = np.array(self.equalization_params_brightfield[plate])
             dead_params = np.array(self.equalization_params_dead[plate])
             live_params = np.array(self.equalization_params_live[plate])
@@ -346,19 +351,38 @@ class HarmonyDataset(Dataset):
             np.save(os.path.join(self.root, measurement, "equalization", "equalization_params_dead.npy"), dead_params)
             np.save(os.path.join(self.root, measurement, "equalization", "equalization_params_live.npy"), live_params)
 
-            print("Equalization params saved.")
+            if self.debug: print("Equalization params saved.")
 
     def __len__(self):
-        return len(self.wells)
+        """
+        This method returns the length of the dataset. This is the number of wells in the dataset times the number of
+        depths in each well.
+        :return:
+        """
+        if self.len is not None:
+            return self.len
+        self.len = len(self.wells) * self.depth_range
+        return self.len
 
     def __getitem__(self, idx):
-        print(f"Getting well... {self.wells[idx]}")
-        well = self.wells[idx]
+
+        well_idx = idx // self.depth_range
+        depth_idx = idx % self.depth_range
+
+        if self.debug: print(f"Getting well... {self.wells[well_idx]}")
+        try:
+            if self.debug: print(f"Getting depth... {self.depths[self.wells[well_idx]][depth_idx]}")
+        except Exception as e:
+            if self.debug: print(f"Depth not found for well {self.wells[well_idx]}")
+            if self.debug: print(f"Depth index: {depth_idx}")
+            if self.debug: print(f"Depths: {self.depths[self.wells[well_idx]]}")
+            raise e
+
+
+        well = self.wells[well_idx]
 
         # To make sure that all the depths of a well are used before repeating
-        if len(self.depth_pool[well]) == 0:
-            self.depth_pool[well] = self.depths[well].tolist()
-        depth = np.random.choice(self.depth_pool[well])
+        depth = self.depths[well][depth_idx]
 
         measurement = well.split("f")[0][:-6]
 
@@ -508,6 +532,7 @@ class HarmonyDataset(Dataset):
 
 
         if self.transform is not None:
+            if self.debug: print("Transforming...")
             x = self.transform(x)
             y = self.transform(y)
 
@@ -520,7 +545,7 @@ class HarmonyDataset(Dataset):
         # save potential centers to hard drive
         np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
 
-        print(f"Skipped tiles: {skipped_tiles}")
+        if self.debug: print(f"Skipped tiles: {skipped_tiles}")
 
         return x, y
 
