@@ -86,8 +86,8 @@ class HarmonyDataset(Dataset):
             # set image size
             self.image_size = cv2.imread(self.bf_stacks[self.wells[0]][0], cv2.IMREAD_GRAYSCALE).shape[0]
 
-            min_pos = tile_size / 2
-            max_pos = self.image_size + tile_size / 2
+            min_pos = tile_size / 2 + 1
+            max_pos = self.image_size - tile_size / 2 - 1
             # define in focus range for each well
             if self.debug: print(f"Generating samples for measurement {measurement}...")
             self.generate_samples(plate_wells, depth_padding, max_pos, measurement, min_pos)

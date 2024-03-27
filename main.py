@@ -195,6 +195,7 @@ if __name__ == '__main__':
 
 
     for epoch in range(EPOCHS):
+        logging_time = 0
         print(f"Epoch {epoch}")
         for batch_idx, (bf_channels, true_flourescent) in enumerate(loader):
             start_time = time.time()
@@ -236,10 +237,12 @@ if __name__ == '__main__':
 
 
             # Display one pair of real and generated images
-            if batch_idx == 0:
+            if time.time() - logging_time > 60:
                 print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
                       f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
                     )
+
+                logging_time = time.time()
 
                 # extract indeces for 4 different images
 
