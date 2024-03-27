@@ -102,9 +102,10 @@ class HarmonyDataset(Dataset):
                 mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
                 potential_centers = np.argwhere(mask > 0)
                 # remove potential centers that are too close to the edge
-                potential_centers = potential_centers[
-                    (potential_centers[:, 0] > min_pos) & (potential_centers[:, 0] < max_pos) &
-                    (potential_centers[:, 1] > min_pos) & (potential_centers[:, 1] < max_pos)]
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] < min_pos), axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] > max_pos), axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] < min_pos), axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] > max_pos), axis=0)
 
                 np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
 
