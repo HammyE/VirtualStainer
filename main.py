@@ -104,7 +104,7 @@ if __name__ == '__main__':
     loader = DataLoader(
         dataset,
         batch_size=BATCH_SIZE,
-        shuffle=True,
+        shuffle=False,
         collate_fn=custom_collate_fn,
         sampler=sampler
     )
