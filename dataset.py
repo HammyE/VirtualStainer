@@ -454,7 +454,6 @@ class HarmonyDataset(Dataset):
                     print(left, right, top, bottom)
 
                     if not self.debug:
-                        global plt
                         import matplotlib.pyplot as plt
                     plt.imshow(mask)
                     plt.scatter(center[1], center[0], c='r', s=10, marker='x')
