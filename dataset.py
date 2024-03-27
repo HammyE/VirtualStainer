@@ -415,6 +415,8 @@ class HarmonyDataset(Dataset):
                 bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
                 bf_images.append(bf_img)
             except IndexError as e:
+                for img in self.bf_stacks[well]:
+                    print(img)
                 print(f"Index error: {well}, {i}")
                 print(f"Depth: {depth}")
                 raise e
