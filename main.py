@@ -97,6 +97,8 @@ if __name__ == '__main__':
     )
     print("Data loader loaded.")
 
+
+
     if DEBUG:
         # show data
         n_samples = 2
@@ -189,6 +191,8 @@ if __name__ == '__main__':
     live_writer = SummaryWriter(f"runs/{time_stamp}/live")
     bf_writer = SummaryWriter(f"runs/{time_stamp}/brightfield")
     progress_writer = SummaryWriter(f"runs/{time_stamp}/progress")
+    logging_steps = 0
+
 
     for epoch in range(EPOCHS):
         logging_time = 0
@@ -271,15 +275,15 @@ if __name__ == '__main__':
                 dead_fake_grid = torchvision.utils.make_grid(dead_sample_gen)
                 live_fake_grid = torchvision.utils.make_grid(live_sample_gen)
 
-                dead_writer.add_image('Real', dead_real_grid, epoch)
-                live_writer.add_image('Real', live_real_grid, epoch)
-                bf_writer.add_image('Real', bf_real_grid, epoch)
-                dead_writer.add_image('Generated', dead_fake_grid, epoch)
-                live_writer.add_image('Generated', live_fake_grid, epoch)
+                dead_writer.add_image('Real', dead_real_grid, logging_steps)
+                live_writer.add_image('Real', live_real_grid, logging_steps)
+                bf_writer.add_image('Real', bf_real_grid, logging_steps)
+                dead_writer.add_image('Generated', dead_fake_grid, logging_steps)
+                live_writer.add_image('Generated', live_fake_grid, logging_steps)
 
                 # log losses
-                progress_writer.add_scalar('Discriminator Loss', d_loss.item(), epoch)
-                progress_writer.add_scalar('Generator Loss', g_loss.item(), epoch)
+                progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
+                progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
 
                 # accuracy
                 disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
@@ -288,9 +292,10 @@ if __name__ == '__main__':
                 disc_fake_outputs = np.round(disc_fake_outputs)
                 true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
                 fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
-                progress_writer.add_scalar('True Accuracy', true_accuracy, epoch)
-                progress_writer.add_scalar('Fake Accuracy', fake_accuracy, epoch)
+                progress_writer.add_scalar('True Accuracy', true_accuracy, logging_steps)
+                progress_writer.add_scalar('Fake Accuracy', fake_accuracy, logging_steps)
 
+                logging_steps += 1
 
 
 
