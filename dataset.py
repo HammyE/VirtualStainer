@@ -465,6 +465,7 @@ class HarmonyDataset(Dataset):
                     plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
                     plt.show()
 
+
                     raise e
 
             horizontal_flip = np.random.rand() > 0.5
