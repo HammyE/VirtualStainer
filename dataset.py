@@ -410,9 +410,14 @@ class HarmonyDataset(Dataset):
             plt.figure(figsize=(10, 20))
 
         for i in range(depth - self.depth_padding, depth + self.depth_padding + 1):
-            bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
-            bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
-            bf_images.append(bf_img)
+            try:
+                bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
+                bf_images.append(bf_img)
+            except IndexError as e:
+                print(f"Index error: {well}, {i}")
+                print(f"Depth: {depth}")
+                raise e
 
         dead_img = cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
         live_img = cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
