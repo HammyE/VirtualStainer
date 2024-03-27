@@ -452,6 +452,19 @@ class HarmonyDataset(Dataset):
                     print(self.masks[well])
                     print(center)
                     print(left, right, top, bottom)
+
+                    if not self.debug:
+                        global plt
+                        import matplotlib.pyplot as plt
+                    plt.imshow(mask)
+                    plt.scatter(center[1], center[0], c='r', s=10, marker='x')
+                    # draw bounding box
+                    plt.plot([top, top], [right, left], 'b', linewidth=0.5)
+                    plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
+                    plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
+                    plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
+                    plt.show()
+
                     raise e
 
             horizontal_flip = np.random.rand() > 0.5
