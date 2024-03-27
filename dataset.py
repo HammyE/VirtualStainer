@@ -115,14 +115,15 @@ class HarmonyDataset(Dataset):
                 max_depth += diff
             if max_depth + depth_padding > len(self.bf_stacks[well]):
                 print("Max type error")
-                diff = max_depth - len(self.bf_stacks[well]) + depth_padding
-                max_depth = len(self.bf_stacks[well]) - depth_padding
+                diff = max_depth - len(self.bf_stacks[well]) + depth_padding + 1
+                max_depth = len(self.bf_stacks[well]) - depth_padding - 1
                 min_depth -= diff
 
             try:
                 # check if the depths are within the range of the bf stack
                 assert min_depth - self.depth_padding >= 0
                 assert max_depth + self.depth_padding < len(self.bf_stacks[well])
+                assert len(np.arange(min_depth, max_depth + 1)) == self.depth_range
             except AssertionError as e:
                 print(f"Index error: {well}, {min_depth}, {max_depth}")
                 print(f"Depth: {self.depths[well]}")
