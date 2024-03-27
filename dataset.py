@@ -452,6 +452,7 @@ class HarmonyDataset(Dataset):
                     print(self.masks[well])
                     print(center)
                     print(left, right, top, bottom)
+                    raise e
 
             horizontal_flip = np.random.rand() > 0.5
             vertical_flip = np.random.rand() > 0.5
