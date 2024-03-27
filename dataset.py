@@ -439,11 +439,19 @@ class HarmonyDataset(Dataset):
                 top = center[1] - round(self.tile_size / 2)
                 bottom = center[1] + round(self.tile_size / 2)
 
-                if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
-                    skipped_tiles += 1
-                    potential_centers = np.delete(potential_centers, center_idx, axis=0)
-                else:
-                    valid_tile = True
+                try:
+
+                    if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
+                        skipped_tiles += 1
+                        potential_centers = np.delete(potential_centers, center_idx, axis=0)
+                    else:
+                        valid_tile = True
+                except IndexError as e:
+                    print(f"Index error: {well}, {depth}")
+                    print(f"Depth: {depth}")
+                    print(self.masks[well])
+                    print(center)
+                    print(left, right, top, bottom)
 
             horizontal_flip = np.random.rand() > 0.5
             vertical_flip = np.random.rand() > 0.5
