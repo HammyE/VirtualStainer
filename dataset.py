@@ -100,8 +100,12 @@ class HarmonyDataset(Dataset):
                 if not os.path.exists(os.path.join(self.root, measurement, "potential_centers")):
                     os.makedirs(os.path.join(self.root, measurement, "potential_centers"))
                 mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
-                cropped_mask = mask[int(min_pos):int(max_pos), int(min_pos):int(max_pos)]
-                potential_centers = np.argwhere(cropped_mask > 0)
+                potential_centers = np.argwhere(mask > 0)
+                # remove potential centers that are too close to the edge
+                potential_centers = potential_centers[
+                    (potential_centers[:, 0] > min_pos) & (potential_centers[:, 0] < max_pos) &
+                    (potential_centers[:, 1] > min_pos) & (potential_centers[:, 1] < max_pos)]
+
                 np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
 
             self.potential_centers[well] = os.path.join(self.root, measurement, "potential_centers", well + ".npy")

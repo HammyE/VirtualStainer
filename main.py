@@ -190,10 +190,6 @@ if __name__ == '__main__':
     bf_writer = SummaryWriter(f"runs/{time_stamp}/brightfield")
     progress_writer = SummaryWriter(f"runs/{time_stamp}/progress")
 
-    dataset.__getitem__(12123)
-
-
-
     for epoch in range(EPOCHS):
         logging_time = 0
         print(f"Epoch {epoch}")
@@ -268,9 +264,6 @@ if __name__ == '__main__':
                 live_sample = torch.cat((live_sample*0.9, live_sample*0.8, live_sample*0), 1)
 
                 bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-
-
-                print(dead_sample_gen.shape)
 
                 dead_real_grid = torchvision.utils.make_grid(dead_sample)
                 live_real_grid = torchvision.utils.make_grid(live_sample)
