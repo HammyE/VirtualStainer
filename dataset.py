@@ -109,12 +109,10 @@ class HarmonyDataset(Dataset):
             min_depth = self.depths[well][0]
             max_depth = self.depths[well][-1]
             if min_depth - depth_padding < 0:
-                print("Min type error")
                 diff = depth_padding - min_depth
                 min_depth = depth_padding
                 max_depth += diff
             if max_depth + depth_padding > len(self.bf_stacks[well]):
-                print("Max type error")
                 diff = max_depth - len(self.bf_stacks[well]) + depth_padding + 1
                 max_depth = len(self.bf_stacks[well]) - depth_padding - 1
                 min_depth -= diff
@@ -611,7 +609,7 @@ class HarmonyDataset(Dataset):
             except Exception as e:
                 print(f"Error in well {well} and depth {depth}")
                 print(f"With index {idx}")
-                raise(e)
+                raise e
 
 
 def custom_collate_fn(batch):

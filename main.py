@@ -190,6 +190,8 @@ if __name__ == '__main__':
     bf_writer = SummaryWriter(f"runs/{time_stamp}/brightfield")
     progress_writer = SummaryWriter(f"runs/{time_stamp}/progress")
 
+    dataset.__getitem__(12123)
+
 
 
     for epoch in range(EPOCHS):
