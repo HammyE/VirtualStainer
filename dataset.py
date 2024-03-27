@@ -2,13 +2,14 @@ import os
 import torch
 import cv2
 import numpy as np
-#from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 from torch.utils.data import Dataset
 from MaximumIntensityProjection import equalize, get_equalization_params, get_blur, gaussian
 from TileTransform import TileTransform
 
 plt = None
+
 
 class ImageSample():
 
@@ -26,7 +27,8 @@ class ImageSample():
 
 
 class HarmonyDataset(Dataset):
-    def __init__(self, root, equalization=None, tile_size=256, overlap=32, depth_padding=1, depth_range=20, picture_batch_size=8, transform=None):
+    def __init__(self, root, equalization=None, tile_size=256, overlap=32, depth_padding=1, depth_range=20,
+                 picture_batch_size=8, transform=None):
         '''
         This is dataset class for harmony dataset, that parses the file structure and returns the brightfield images
         and the corresponding stained images.
@@ -60,6 +62,8 @@ class HarmonyDataset(Dataset):
         self.masks = {}
         self.potential_centers = {}
 
+        self.initial_guess = [1, 1, 1]
+
         self.len = None
 
         if self.debug:
@@ -77,7 +81,7 @@ class HarmonyDataset(Dataset):
 
             # Extract the wells from the images
             if self.debug: print(f"Extracting wells from measurement {measurement}...")
-            self.extract_wells(images, measurement)
+            plate_wells = self.extract_wells(images, measurement)
 
             # set image size
             self.image_size = cv2.imread(self.bf_stacks[self.wells[0]][0], cv2.IMREAD_GRAYSCALE).shape[0]
@@ -86,10 +90,10 @@ class HarmonyDataset(Dataset):
             max_pos = self.image_size + tile_size / 2
             # define in focus range for each well
             if self.debug: print(f"Generating samples for measurement {measurement}...")
-            self.generate_samples(depth_padding, max_pos, measurement, min_pos)
+            self.generate_samples(plate_wells, depth_padding, max_pos, measurement, min_pos)
 
-    def generate_samples(self, depth_padding, max_pos, measurement, min_pos):
-        for well in self.wells:
+    def generate_samples(self, plate_wells, depth_padding, max_pos, measurement, min_pos):
+        for well in plate_wells:
             self.find_depth_and_mask(measurement, well)
 
             if not os.path.isfile(os.path.join(self.root, measurement, "potential_centers", well + ".npy")):
@@ -113,13 +117,10 @@ class HarmonyDataset(Dataset):
                 max_depth = len(self.bf_stacks[well]) - depth_padding
                 min_depth -= diff
 
-
             # change depths to new min and max
             self.depths[well] = np.arange(min_depth, max_depth + 1)
 
-
     def find_depth_and_mask(self, measurement, well):
-
 
         # Check if depths and masks already exist
         if os.path.isfile(os.path.join(self.root, measurement, "masks", well + ".tiff")):
@@ -163,7 +164,15 @@ class HarmonyDataset(Dataset):
             x = np.arange(0, len(blur_list), 1)
             y = np.array(blur_list)
             # Fit the curve to a gaussian curve
-            popt, pcov = curve_fit(gaussian, x, y, p0=[1, 1, 1])
+            try:
+                popt, pcov = curve_fit(gaussian, x, y, p0=[1, 1, 1])
+            except:
+                max_y = np.max(y)
+                index_x = np.argmax(y)
+                popt = [max_y, index_x, self.initial_guess[2]]
+                plt.scatter(x, y)
+                plt.show()
+
             # Get the 20 images with the highest focus according to the gaussian curve
             self.depths[well] = sorted(np.argsort(gaussian(x, *popt))[-self.depth_range:])
 
@@ -201,12 +210,12 @@ class HarmonyDataset(Dataset):
                 fig, axs = plt.subplots(n_rows, n_images_row, figsize=(15, 15))
                 idx = 0
 
-
                 left = self.image_size
                 right = 0
                 top = self.image_size
                 bottom = 0
-                for pixel in np.argwhere(self.masks[well] > 0):
+                mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+                for pixel in np.argwhere(mask > 0):
                     left = np.min([left, int(pixel[0])])
                     right = np.max([right, int(pixel[0])])
                     top = np.min([top, int(pixel[1])])
@@ -233,6 +242,7 @@ class HarmonyDataset(Dataset):
                 plt.show()
 
     def extract_wells(self, images, measurement):
+        plate_wells = []
         for image in images:
             if image.endswith("f01p01-ch1sk1fk1fl1.tiff"):
                 dead_channels = [os.path.join(self.root, measurement, "images", image)]
@@ -290,9 +300,12 @@ class HarmonyDataset(Dataset):
 
                 self.wells.append(well_name)
 
+                plate_wells.append(well_name)
+
                 self.bf_stacks[well_name] = (bf_channels)
                 self.dead_stacks[well_name] = (dead_channels)
                 self.live_stacks[well_name] = (live_channels)
+        return plate_wells
 
     def load_equalization(self, measurement):
         if os.path.exists(os.path.join(self.root, measurement, "equalization")):
@@ -375,7 +388,6 @@ class HarmonyDataset(Dataset):
             if self.debug: print(f"Depths: {self.depths[self.wells[well_idx]]}")
             raise e
 
-
         well = self.wells[well_idx]
 
         # To make sure that all the depths of a well are used before repeating
@@ -383,7 +395,8 @@ class HarmonyDataset(Dataset):
 
         measurement = well.split("f")[0][:-6]
 
-        x = torch.tensor(np.zeros((self.picture_batch_size, self.depth_padding*2+1 , self.tile_size, self.tile_size)))
+        x = torch.tensor(
+            np.zeros((self.picture_batch_size, self.depth_padding * 2 + 1, self.tile_size, self.tile_size)))
         y = torch.tensor(np.zeros((self.picture_batch_size, 2, self.tile_size, self.tile_size)))
 
         bf_images = []
@@ -407,7 +420,6 @@ class HarmonyDataset(Dataset):
 
         potential_centers = np.load(self.potential_centers[well])
         mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
-
 
         for picture in range(self.picture_batch_size):
             valid_tile = False
@@ -521,12 +533,6 @@ class HarmonyDataset(Dataset):
                 # plt.title('Tile Mask')
                 # plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
                 # plt.axis('off')
-
-
-
-
-
-
 
         if self.transform is not None:
             if self.debug: print("Transforming...")
