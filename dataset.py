@@ -109,10 +109,12 @@ class HarmonyDataset(Dataset):
             min_depth = self.depths[well][0]
             max_depth = self.depths[well][-1]
             if min_depth - depth_padding < 0:
+                print("Min type error")
                 diff = depth_padding - min_depth
                 min_depth = depth_padding
                 max_depth += diff
             if max_depth + depth_padding > len(self.bf_stacks[well]):
+                print("Max type error")
                 diff = max_depth - len(self.bf_stacks[well]) + depth_padding
                 max_depth = len(self.bf_stacks[well]) - depth_padding
                 min_depth -= diff
