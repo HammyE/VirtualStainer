@@ -476,7 +476,7 @@ class HarmonyDataset(Dataset):
                             plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
                             plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
                             plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                            plt.show()
+                            plt.savefig(f"error_{idx}.png")
 
 
                             raise e
