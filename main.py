@@ -18,9 +18,14 @@ from GeneratorNetwork import GeneratorNetwork
 from RangeTransform import RangeTransform
 from dataset import HarmonyDataset, custom_collate_fn
 
+import torch.distributed as dist
+import torch.nn as nn
+
 # Defining the main function
 
 data_dir = 'dataset'
+
+dist.init_process_group(backend="nccl")
 
 if __name__ == '__main__':
     # Hyperparameters
@@ -86,6 +91,13 @@ if __name__ == '__main__':
         picture_batch_size=PIC_BATCH_SIZE
     )
 
+    sampler = None
+
+    if torch.cuda.is_available():
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=dist.get_world_size(), rank=dist.get_rank())
+
+
+
     print("Dataset loaded.")
 
     print("Loading data loader...")
@@ -93,7 +105,8 @@ if __name__ == '__main__':
         dataset,
         batch_size=BATCH_SIZE,
         shuffle=True,
-        collate_fn=custom_collate_fn
+        collate_fn=custom_collate_fn,
+        sampler=sampler
     )
     print("Data loader loaded.")
 
@@ -104,6 +117,7 @@ if __name__ == '__main__':
         n_samples = 2
         range_transform = RangeTransform(in_range=(0, 1), out_range=(0, 255))
         print("Showing data...")
+
 
         images_processed = []
         for batch_idx, (bf_channels, true_flourescent) in enumerate(loader):
@@ -165,10 +179,17 @@ if __name__ == '__main__':
     generator = GeneratorNetwork(out_channels=2,
                                  image_size=TILE_SIZE,
                                  depth_padding=DEPTH_PADDING,
-                                 min_encoding_dim=MIN_ENCODER_DIM).to(DEVICE)
+                                 min_encoding_dim=MIN_ENCODER_DIM)
 
     discriminator = DiscriminatorNetwork(image_size=TILE_SIZE,
-                                         depth_padding=DEPTH_PADDING).to(DEVICE)
+                                         depth_padding=DEPTH_PADDING)
+
+    if torch.cuda.is_available():
+        generator = nn.DataParallel(generator)
+        discriminator = nn.DataParallel(discriminator)
+
+    generator.to(DEVICE)
+    discriminator.to(DEVICE)
 
     # GAN loss is
     # loss = E[log(D(x,y))] + E[log(1 - D(G(x, G(x)))]
@@ -197,6 +218,10 @@ if __name__ == '__main__':
     for epoch in range(EPOCHS):
         logging_time = 0
         print(f"Epoch {epoch}")
+
+        if sampler is not None:
+            sampler.set_epoch(epoch)
+
         for batch_idx, (bf_channels, true_flourescent) in enumerate(loader):
             start_time = time.time()
             bf_channels = bf_channels.to(DEVICE)
