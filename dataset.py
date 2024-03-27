@@ -119,8 +119,8 @@ class HarmonyDataset(Dataset):
 
             try:
                 # check if the depths are within the range of the bf stack
-                assert min_depth >= 0
-                assert max_depth < len(self.bf_stacks[well])
+                assert min_depth - self.depth_padding >= 0
+                assert max_depth + self.depth_padding < len(self.bf_stacks[well])
             except AssertionError as e:
                 print(f"Index error: {well}, {min_depth}, {max_depth}")
                 print(f"Depth: {self.depths[well]}")
