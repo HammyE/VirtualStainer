@@ -468,8 +468,7 @@ class HarmonyDataset(Dataset):
                             print(center)
                             print(left, right, top, bottom)
 
-                            if not self.debug:
-                                import matplotlib.pyplot as plt
+                            import matplotlib.pyplot as plt
                             plt.imshow(mask)
                             plt.scatter(center[1], center[0], c='r', s=10, marker='x')
                             # draw bounding box
