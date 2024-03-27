@@ -467,7 +467,17 @@ class HarmonyDataset(Dataset):
                 if rotation > 0:
                     bf_tile = torch.rot90(bf_tile, rotation, [0, 1])
 
-                x[picture, i] = bf_tile
+                try:
+                    x[picture, i] = bf_tile
+                except RuntimeError as e:
+                    print(f"Index error: {well}, {depth}")
+                    print(f"Depth: {depth}")
+                    print(f"Picture: {picture}")
+                    print(f"Image: {i}")
+                    print(f"Shape: {x.shape}")
+                    print(f"Tile shape: {bf_tile.shape}")
+                    print(f"Left: {left}, Right: {right}, Top: {top}, Bottom: {bottom}")
+                    raise e
 
             dead_tile = torch.tensor(dead_img[left:right, top:bottom])
             live_tile = torch.tensor(live_img[left:right, top:bottom])
