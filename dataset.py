@@ -334,9 +334,6 @@ class HarmonyDataset(Dataset):
                     all_images_live.append(img.replace("ch3", "ch2"))
 
             # load images
-            all_images_brightfield = [cv2.imread(img) for img in all_images_brightfield]
-            all_images_dead = [cv2.imread(img) for img in all_images_dead]
-            all_images_live = [cv2.imread(img) for img in all_images_live]
             self.equalization_params_brightfield[plate] = get_equalization_params(
                 all_images_brightfield)
             self.equalization_params_dead[plate] = get_equalization_params(all_images_dead)

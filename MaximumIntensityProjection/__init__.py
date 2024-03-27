@@ -31,8 +31,14 @@ def get_equalization_params(img_set):
     '''
     ## TODO : Implement with quantiles
 
-    min_brightness = np.min([np.min(np.array(img)) for img in img_set])
-    max_brightness = np.max([np.max(np.array(img)) for img in img_set])
+    min_brightness = float('inf')
+    max_brightness = float('-inf')
+
+    for image in img_set:
+        image = cv2.imread(image)
+        min_brightness = min(min_brightness, np.min(image))
+        max_brightness = max(max_brightness, np.max(image))
+
 
     return min_brightness, max_brightness
 
