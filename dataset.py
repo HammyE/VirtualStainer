@@ -167,11 +167,13 @@ class HarmonyDataset(Dataset):
             try:
                 popt, pcov = curve_fit(gaussian, x, y, p0=[1, 1, 1])
             except:
+
                 max_y = np.max(y)
                 index_x = np.argmax(y)
                 popt = [max_y, index_x, self.initial_guess[2]]
-                plt.scatter(x, y)
-                plt.show()
+                if self.debug:
+                    plt.scatter(x, y)
+                    plt.show()
 
             # Get the 20 images with the highest focus according to the gaussian curve
             self.depths[well] = sorted(np.argsort(gaussian(x, *popt))[-self.depth_range:])
