@@ -50,8 +50,6 @@ def train_model(training_params):
                                  image_size=TILE_SIZE,
                                  depth_padding=DEPTH_PADDING,
                                  min_encoding_dim=MIN_ENCODER_DIM)
-
-    input("Press Enter to continue...")
     discriminator = DiscriminatorNetwork(image_size=TILE_SIZE,
                                          depth_padding=DEPTH_PADDING)
 
