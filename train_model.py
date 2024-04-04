@@ -40,6 +40,10 @@ def train_model(training_params):
             num_workers=4
         )
 
+    # test device
+    x = torch.ones(1, device=DEVICE)
+    print(x)
+
     # train model
     generator = GeneratorNetwork(out_channels=2,
                                  image_size=TILE_SIZE,
