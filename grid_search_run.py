@@ -107,15 +107,27 @@ if __name__ == '__main__':
     n_cuda = torch.cuda.device_count()
     n_parameter_sets = len(parameter_sets)
 
-    for i, params in enumerate(parameter_sets):
-        params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
-
         # Setup multiprocessing
 
-    print(f"n processes: {process+1}")
+    def train_model_chunk(chunk):
+        for params in chunk:
+            # Your existing logic to train the model with this set of parameters
+            train_model(params)
 
-    with multiprocessing.Pool(n_cuda) as pool:
-        pool.map(train_model, parameter_sets)
+    print(f"n processes: {process+1}")
+    chunks = [parameter_sets[i:i + n_cuda*2] for i in range(0, n_parameter_sets, n_cuda*2)]
+
+    for i, chunk in enumerate(chunks):
+        print(f"Chunk {i}: {chunk}")
+        # set device for each chunk
+        for params in chunk:
+            params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
+
+
+    with multiprocessing.Pool(n_cuda*2) as pool:
+        for i, chunk in enumerate(chunks):
+            # Assign each chunk to a worker, specifying the device inside the chunk or inside the train_model logic
+            pool.apply_async(train_model_chunk, args=(chunk,))
 
 
 
