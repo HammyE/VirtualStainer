@@ -44,6 +44,10 @@ def train_model(training_params):
     x = torch.ones(1, device=DEVICE)
     print(x)
 
+    # pause execution if device is cuda for 5 seconds
+    if DEVICE.type == 'cuda':
+        time.sleep(5)
+
     # train model
     generator = GeneratorNetwork(out_channels=2,
                                  image_size=TILE_SIZE,
