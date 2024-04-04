@@ -33,6 +33,7 @@ if __name__ == '__main__':
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
+    DEPTH_PADDING = 2
 
 
     # For M1 Macs check for mps
@@ -69,37 +70,35 @@ if __name__ == '__main__':
 
 
     learning_rate = [0.001, 0.01, 0.1]
-    depth_padding = [2]
     l1_lambda = [0.01, 0.1, 1]
     l2_lambda = [0.01, 0.1, 1]
 
     parameter_sets = []
-    for dp in depth_padding:
-        dataset = HarmonyDataset(
-            root=data_dir,
-            equalization="histogram",
-            tile_size=TILE_SIZE,
-            overlap=OVERLAP,
-            transform=transform,
-            depth_padding=dp,
-            picture_batch_size=PIC_BATCH_SIZE
-        )
-        for lr in learning_rate:
-            for l1 in l1_lambda:
-                for l2 in l2_lambda:
-                    parameter_sets.append({
-                        'LEARNING_RATE': lr,
-                        'DEPTH_PADDING': dp,
-                        'L1_LAMBDA': l1,
-                        'L2_LAMBDA': l2,
-                        'loader': False,
-                        'EPOCHS': EPOCHS,
-                        'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
-                        'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
-                        'SAVE_MODEL': SAVE_MODEL,
-                        'DEVICE': DEVICE,
-                        'dataset': dataset,
-                    })
+    dataset = HarmonyDataset(
+        root=data_dir,
+        equalization="histogram",
+        tile_size=TILE_SIZE,
+        overlap=OVERLAP,
+        transform=transform,
+        depth_padding=DEPTH_PADDING,
+        picture_batch_size=PIC_BATCH_SIZE
+    )
+    for lr in learning_rate:
+        for l1 in l1_lambda:
+            for l2 in l2_lambda:
+                parameter_sets.append({
+                    'LEARNING_RATE': lr,
+                    'DEPTH_PADDING': DEPTH_PADDING,
+                    'L1_LAMBDA': l1,
+                    'L2_LAMBDA': l2,
+                    'loader': False,
+                    'EPOCHS': EPOCHS,
+                    'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
+                    'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
+                    'SAVE_MODEL': SAVE_MODEL,
+                    'DEVICE': DEVICE,
+                    'dataset': dataset,
+                })
 
     n_cuda = torch.cuda.device_count()
     n_parameter_sets = len(parameter_sets)
