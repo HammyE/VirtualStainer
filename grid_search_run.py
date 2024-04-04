@@ -124,10 +124,16 @@ if __name__ == '__main__':
             params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
 
 
+    async_results = []
     with multiprocessing.Pool(n_cuda*2) as pool:
-        for i, chunk in enumerate(chunks):
-            # Assign each chunk to a worker, specifying the device inside the chunk or inside the train_model logic
-            pool.apply_async(train_model_chunk, args=(chunk,))
+        for chunk in chunks:
+            # Dispatch the task asynchronously
+            async_result = pool.apply_async(train_model_chunk, (chunk,))
+            async_results.append(async_result)
+
+        # Wait for all tasks to complete
+        for async_result in async_results:
+            async_result.get()
 
 
 
