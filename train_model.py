@@ -82,8 +82,8 @@ def train_model(training_params):
             true_fluorescent = true_fluorescent.to(DEVICE)
 
             print(f"Batch {batch_idx}")
-            # if epoch == 0 and batch_idx == 0:
-                # print(bf_channels.shape)
+            if epoch == 0 and batch_idx == 0:
+                print(bf_channels.shape)
                 # print(true_fluorescent.shape)
                 # # calculate the memory usage of a batch
                 # print("Memory usage of input: ", bf_channels.element_size() * bf_channels.nelement() / 1024 / 1024,
