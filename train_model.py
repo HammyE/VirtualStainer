@@ -44,10 +44,10 @@ def train_model(training_params):
 
     # Add writers for tensorboard
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    fake_writer = SummaryWriter(f"runs/{time_stamp}/fake")
-    real_writer = SummaryWriter(f"runs/{time_stamp}/real")
-    bf_writer = SummaryWriter(f"runs/{time_stamp}/brightfield")
-    progress_writer = SummaryWriter(f"runs/{time_stamp}/progress")
+    fake_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/fake")
+    real_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/real")
+    bf_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/brightfield")
+    progress_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/progress")
 
     logging_steps = 0
     for epoch in range(EPOCHS):

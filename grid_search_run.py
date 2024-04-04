@@ -97,7 +97,7 @@ if __name__ == '__main__':
                             batch_size=BATCH_SIZE,
                             collate_fn=custom_collate_fn,
                             shuffle=True,
-                            num_workers=4
+                            num_workers=1
                         ),
                         'EPOCHS': EPOCHS,
                         'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
