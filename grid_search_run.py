@@ -118,7 +118,7 @@ if __name__ == '__main__':
     chunks = [parameter_sets[i:i + n_cuda*2] for i in range(0, n_parameter_sets, n_cuda*2)]
 
     for i, chunk in enumerate(chunks):
-        print(f"Chunk {i}: {chunk}")
+        print(f"Chunk {i}")
         # set device for each chunk
         for params in chunk:
             params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
