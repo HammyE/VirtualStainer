@@ -3,8 +3,8 @@ import subprocess
 import matplotlib.pyplot as plt
 import torch
 from torch import multiprocessing
-from torch.utils.data import DataLoader
 from torchvision import transforms
+from multiprocessing import Process, Manager
 
 from RangeTransform import RangeTransform
 from dataset import HarmonyDataset, custom_collate_fn
@@ -13,6 +13,20 @@ from train_model import train_model
 # Defining the main function
 
 data_dir = 'dataset'
+
+def worker_func(shared_param_sets, lock, gpu_id):
+    torch.cuda.set_device(gpu_id)  # Set GPU for this process
+    while True:
+        lock.acquire()
+        if not shared_param_sets:
+            lock.release()
+            break  # Exit loop if there are no more parameter sets
+        params = shared_param_sets.pop(0)  # Safely pop the next parameter set
+        lock.release()
+
+        # Now, train the model with these parameters on the assigned GPU
+        params['DEVICE'] = torch.device('cuda:{gpu_id}')
+        train_model(params)  # Your training function
 
 
 
@@ -105,35 +119,25 @@ if __name__ == '__main__':
                 process += 1
 
     n_cuda = torch.cuda.device_count()
+    n_workers = n_cuda * 2
     n_parameter_sets = len(parameter_sets)
 
         # Setup multiprocessing
 
-    def train_model_chunk(chunk):
-        for params in chunk:
-            # Your existing logic to train the model with this set of parameters
-            train_model(params)
+    manager = Manager()
 
-    print(f"n processes: {process+1}")
-    chunks = [parameter_sets[i:i + n_cuda*2] for i in range(0, n_parameter_sets, n_cuda*2)]
+    shared_param_sets = manager.list(parameter_sets)
+    lock = manager.Lock()
 
-    for i, chunk in enumerate(chunks):
-        print(f"Chunk {i}")
-        # set device for each chunk
-        for params in chunk:
-            params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
+    processes = []
+    for i in range(n_workers):
+        gpu_id = i % n_cuda  # Distribute GPUs among workers
+        p = Process(target=worker_func, args=(shared_param_sets, lock, gpu_id))
+        p.start()
+        processes.append(p)
 
-
-    async_results = []
-    with multiprocessing.Pool(n_cuda*2) as pool:
-        for chunk in chunks:
-            # Dispatch the task asynchronously
-            async_result = pool.apply_async(train_model_chunk, (chunk,))
-            async_results.append(async_result)
-
-        # Wait for all tasks to complete
-        for async_result in async_results:
-            async_result.get()
+    for p in processes:
+        p.join()
 
 
 
