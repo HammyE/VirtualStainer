@@ -25,7 +25,7 @@ def train_model(training_params):
     L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
-    if loader is None:
+    if loader == False:
         dataset = training_params.get('dataset', None)
         BATCH_SIZE = TRUE_BATCH_SIZE // PIC_BATCH_SIZE
 
