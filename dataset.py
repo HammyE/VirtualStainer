@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 from MaximumIntensityProjection import equalize, get_equalization_params, get_blur, gaussian
 from TileTransform import TileTransform
 
-plt = None
+import matplotlib.pyplot as plt
 
 
 class ImageSample():
@@ -65,10 +65,6 @@ class HarmonyDataset(Dataset):
         self.initial_guess = [1, 1, 1]
 
         self.len = None
-
-        if self.debug:
-            global plt
-            import matplotlib.pyplot as plt
 
         measurements = os.listdir(root)
 
@@ -473,7 +469,6 @@ class HarmonyDataset(Dataset):
                             print(center)
                             print(left, right, top, bottom)
 
-                            import matplotlib.pyplot as plt
                             plt.imshow(mask)
                             plt.scatter(center[1], center[0], c='r', s=10, marker='x')
                             # draw bounding box
@@ -482,7 +477,6 @@ class HarmonyDataset(Dataset):
                             plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
                             plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
                             plt.savefig(f"error_{idx}.png")
-
 
                             raise e
 
@@ -510,7 +504,6 @@ class HarmonyDataset(Dataset):
                             print(f"Tile shape: {bf_tile.shape}")
                             print(f"Left: {left}, Right: {right}, Top: {top}, Bottom: {bottom}")
 
-                            import matplotlib.pyplot as plt
                             plt.imshow(mask)
                             plt.scatter(center[1], center[0], c='r', s=10, marker='x')
                             # draw bounding box
