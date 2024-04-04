@@ -94,6 +94,9 @@ class GeneratorNetwork(nn.Module):
             im_dem = im_dem // 2
             n_layers += 1
 
+            print("im_dem: ", im_dem)
+            print("n_layers: ", n_layers)
+
         if self.debug: print("Number of layers: ", n_layers)
 
         self.downs = nn.ModuleList()
