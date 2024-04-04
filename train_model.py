@@ -37,7 +37,7 @@ def train_model(training_params):
             batch_size=BATCH_SIZE,
             collate_fn=custom_collate_fn,
             shuffle=True,
-            num_workers=4
+            num_workers=0
         )
 
     # test device
