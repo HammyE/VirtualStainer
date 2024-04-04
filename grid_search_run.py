@@ -84,12 +84,6 @@ if __name__ == '__main__':
             depth_padding=dp,
             picture_batch_size=PIC_BATCH_SIZE
         )
-        loader = DataLoader(
-            dataset,
-            batch_size=BATCH_SIZE,
-            shuffle=False,
-            collate_fn=custom_collate_fn
-        )
         for lr in learning_rate:
             for l1 in l1_lambda:
                 for l2 in l2_lambda:
@@ -98,7 +92,13 @@ if __name__ == '__main__':
                         'DEPTH_PADDING': dp,
                         'L1_LAMBDA': l1,
                         'L2_LAMBDA': l2,
-                        'loader': loader,
+                        'loader': DataLoader(
+                            dataset,
+                            batch_size=BATCH_SIZE,
+                            collate_fn=custom_collate_fn,
+                            shuffle=True,
+                            num_workers=4
+                        ),
                         'EPOCHS': EPOCHS,
                         'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
                         'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
