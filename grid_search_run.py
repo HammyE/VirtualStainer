@@ -25,7 +25,7 @@ def worker_func(shared_param_sets, lock, gpu_id):
         lock.release()
 
         # Now, train the model with these parameters on the assigned GPU
-        params['DEVICE'] = torch.device('cuda:{gpu_id}')
+        params['DEVICE'] = torch.device(f'cuda:{gpu_id}')
         train_model(params)  # Your training function
 
 
