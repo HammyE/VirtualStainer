@@ -15,7 +15,7 @@ def train_model(training_params):
     LEARNING_RATE = training_params.get('LEARNING_RATE', 0.001)
     TILE_SIZE = training_params.get('TILE_SIZE', 64)
     DEPTH_PADDING = training_params.get('DEPTH_PADDING', 2)
-    MIN_ENCODER_DIM = training_params.get('MIN_ENCODER_DIM', 16)
+    MIN_ENCODER_DIM = 16
     EPOCHS = training_params.get('EPOCHS', 10)
     loader = training_params.get('loader', None)
     TRUE_BATCH_SIZE = training_params.get('TRUE_BATCH_SIZE', 32)
