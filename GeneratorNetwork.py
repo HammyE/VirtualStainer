@@ -81,15 +81,12 @@ class GeneratorNetwork(nn.Module):
         """
         super(GeneratorNetwork, self).__init__()
 
-        self.debug = False
+        self.debug = True
 
         if features is None:
             features = [64, 128, 256]
         self.image_size = image_size
         self.depth_padding = depth_padding
-
-        # Define the layers
-        image_dimensions = (depth_padding * 2 + 1, image_size, image_size)
 
         n_layers = 0
         im_dem = image_size
