@@ -9,20 +9,20 @@ from DiscriminatorNetwork import DiscriminatorNetwork
 from GeneratorNetwork import GeneratorNetwork
 
 
-def train_model(**kwargs):
+def train_model(training_params):
 
-    LEARNING_RATE = kwargs.get('LEARNING_RATE', 0.001)
-    TILE_SIZE = kwargs.get('TILE_SIZE', 64)
-    DEPTH_PADDING = kwargs.get('DEPTH_PADDING', 2)
-    MIN_ENCODER_DIM = kwargs.get('MIN_ENCODER_DIM', 16)
-    EPOCHS = kwargs.get('EPOCHS', 10)
-    loader = kwargs.get('loader', None)
-    TRUE_BATCH_SIZE = kwargs.get('TRUE_BATCH_SIZE', 32)
-    PIC_BATCH_SIZE = kwargs.get('PIC_BATCH_SIZE', 4)
-    SAVE_MODEL = kwargs.get('SAVE_MODEL', False)
-    L1_LAMBDA = kwargs.get('L1_LAMBDA', 0.01)
-    L2_LAMBDA = kwargs.get('L2_LAMBDA', 0.01)
-    DEVICE = kwargs.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
+    LEARNING_RATE = training_params.get('LEARNING_RATE', 0.001)
+    TILE_SIZE = training_params.get('TILE_SIZE', 64)
+    DEPTH_PADDING = training_params.get('DEPTH_PADDING', 2)
+    MIN_ENCODER_DIM = training_params.get('MIN_ENCODER_DIM', 16)
+    EPOCHS = training_params.get('EPOCHS', 10)
+    loader = training_params.get('loader', None)
+    TRUE_BATCH_SIZE = training_params.get('TRUE_BATCH_SIZE', 32)
+    PIC_BATCH_SIZE = training_params.get('PIC_BATCH_SIZE', 4)
+    SAVE_MODEL = training_params.get('SAVE_MODEL', False)
+    L1_LAMBDA = training_params.get('L1_LAMBDA', 0.01)
+    L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
+    DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
     # train model
     generator = GeneratorNetwork(out_channels=2,

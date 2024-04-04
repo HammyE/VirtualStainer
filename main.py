@@ -161,7 +161,7 @@ if __name__ == '__main__':
         display_images()
 
     train_model(
-        **{'LEARNING_RATE': LEARNING_RATE,
+        {'LEARNING_RATE': LEARNING_RATE,
          'TILE_SIZE': TILE_SIZE,
          'DEPTH_PADDING': DEPTH_PADDING,
          'MIN_ENCODER_DIM': MIN_ENCODER_DIM,
