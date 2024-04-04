@@ -83,10 +83,12 @@ if __name__ == '__main__':
         depth_padding=DEPTH_PADDING,
         picture_batch_size=PIC_BATCH_SIZE
     )
+    process = 0
     for lr in learning_rate:
         for l1 in l1_lambda:
             for l2 in l2_lambda:
                 parameter_sets.append({
+                    'Process': 0,
                     'LEARNING_RATE': lr,
                     'DEPTH_PADDING': DEPTH_PADDING,
                     'L1_LAMBDA': l1,
@@ -100,6 +102,7 @@ if __name__ == '__main__':
                     'TILE_SIZE': TILE_SIZE,
                     'BATCH_SIZE': BATCH_SIZE,
                 })
+                process += 1
 
     n_cuda = torch.cuda.device_count()
     n_parameter_sets = len(parameter_sets)
@@ -108,6 +111,9 @@ if __name__ == '__main__':
         params['DEVICE'] = torch.device(f'cuda:{i % n_cuda}')
 
         # Setup multiprocessing
+
+    print(f"n processes: {process+1}")
+
     with multiprocessing.Pool(n_cuda) as pool:
         pool.map(train_model, parameter_sets)
 
