@@ -98,6 +98,8 @@ if __name__ == '__main__':
                     'SAVE_MODEL': SAVE_MODEL,
                     'DEVICE': DEVICE,
                     'dataset': dataset,
+                    'TILE_SIZE': TILE_SIZE,
+                    'BATCH_SIZE': BATCH_SIZE,
                 })
 
     n_cuda = torch.cuda.device_count()
