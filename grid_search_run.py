@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
 
     learning_rate = [0.001, 0.01, 0.1]
-    depth_padding = [1, 2, 3]
+    depth_padding = [2]
     l1_lambda = [0.01, 0.1, 1]
     l2_lambda = [0.01, 0.1, 1]
 
