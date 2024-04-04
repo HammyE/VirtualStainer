@@ -58,10 +58,13 @@ def train_model(training_params):
 
     # Add writers for tensorboard
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    fake_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/fake")
-    real_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/real")
-    bf_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/brightfield")
-    progress_writer = SummaryWriter(f"runs/{time_stamp}_{training_params}/progress")
+    fake_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/fake")
+    real_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/real")
+    bf_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/brightfield")
+    progress_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/progress")
+
+    # Save parameters to tensorboard
+    progress_writer.add_text('Parameters', f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}", 0)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
