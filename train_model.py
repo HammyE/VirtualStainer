@@ -3,14 +3,15 @@ import time
 import numpy as np
 import torch
 import torchvision
+from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from DiscriminatorNetwork import DiscriminatorNetwork
 from GeneratorNetwork import GeneratorNetwork
+from dataset import custom_collate_fn
 
 
 def train_model(training_params):
-
     LEARNING_RATE = training_params.get('LEARNING_RATE', 0.001)
     TILE_SIZE = training_params.get('TILE_SIZE', 64)
     DEPTH_PADDING = training_params.get('DEPTH_PADDING', 2)
@@ -24,6 +25,21 @@ def train_model(training_params):
     L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
+    if loader is None:
+        dataset = training_params.get('dataset', None)
+        BATCH_SIZE = TRUE_BATCH_SIZE // PIC_BATCH_SIZE
+
+        if dataset is None:
+            raise ValueError("No dataset provided")
+
+        loader = DataLoader(
+            dataset,
+            batch_size=BATCH_SIZE,
+            collate_fn=custom_collate_fn,
+            shuffle=True,
+            num_workers=4
+        )
+
     # train model
     generator = GeneratorNetwork(out_channels=2,
                                  image_size=TILE_SIZE,
@@ -35,12 +51,10 @@ def train_model(training_params):
     generator.to(DEVICE)
     discriminator.to(DEVICE)
 
-
     g_loss_fn = torch.nn.BCELoss()
     d_loss_fn = torch.nn.BCELoss()
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE)
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
-
 
     # Add writers for tensorboard
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
