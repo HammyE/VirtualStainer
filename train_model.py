@@ -86,15 +86,13 @@ def train_model(training_params):
         logging_time = 0
         print(f"Epoch {epoch}")
 
-        if epoch == 0 and SAVE_MODEL:
+        if epoch != 0 and SAVE_MODEL:
             save_start_time = time.time()
             torch.save(generator.state_dict(), f"{log_dir}/generator.pt")
             torch.save(discriminator.state_dict(), f"{log_dir}/discriminator.pt")
             print(f"Model saved in {round(time.time() - save_start_time, 2)} seconds")
             torch.save(generator.state_dict(), f"runs/generator_{time_stamp}.pt")
             #torch.save(discriminator.state_dict(), f"runs/discriminator_{time_stamp}.pt")
-
-            input("Press Enter to continue...")
 
         for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
             start_time = time.time()
