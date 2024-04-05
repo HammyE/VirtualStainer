@@ -441,8 +441,29 @@ class HarmonyDataset(Dataset):
                 dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
                 live_img = equalize(live_img, self.equalization_params_live[measurement])
 
-                potential_centers = np.load(self.potential_centers[well])
                 mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+                try:
+                    potential_centers = np.load(self.potential_centers[well])
+                except ValueError as e:
+                    print("Trying to load potential centers with pickle")
+                    potential_centers = np.load(self.potential_centers[well], allow_pickle=True)
+                except ValueError as e:
+                    print("Recreating potential centers")
+                    min_pos = self.tile_size / 2 + 1
+                    max_pos = self.image_size - self.tile_size / 2 - 1
+
+                    potential_centers = np.argwhere(mask > 0)
+                    potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] < min_pos),
+                                                  axis=0)
+                    potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] > max_pos),
+                                                  axis=0)
+                    potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] < min_pos),
+                                                  axis=0)
+                    potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] > max_pos),
+                                                  axis=0)
+                    np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
+
+
 
                 for picture in range(self.picture_batch_size):
                     valid_tile = False
