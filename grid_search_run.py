@@ -118,6 +118,10 @@ if __name__ == '__main__':
                 })
                 process += 1
 
+    # Pop the first four parameter sets as they are already trained
+    for i in range(4):
+        parameter_sets.pop(0)
+
     n_cuda = torch.cuda.device_count()
     n_workers = n_cuda * 2
     n_parameter_sets = len(parameter_sets)

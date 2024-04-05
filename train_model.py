@@ -25,7 +25,10 @@ def train_model(training_params):
     L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
-    print(f"Training process {training_params['Process']}")
+    try:
+        print(f"Training process {training_params['Process']}")
+    except KeyError:
+        pass
 
     if loader == False:
         dataset = training_params.get('dataset', None)
@@ -68,10 +71,12 @@ def train_model(training_params):
     process = multiprocessing.current_process().name
 
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    fake_writer = SummaryWriter(f"runs/{time_stamp}_{process}/fake")
-    real_writer = SummaryWriter(f"runs/{time_stamp}_{process}/real")
-    bf_writer = SummaryWriter(f"runs/{time_stamp}_{process}/brightfield")
-    progress_writer = SummaryWriter(f"runs/{time_stamp}_{process}/progress")
+    log_dir = f"runs/{time_stamp}_{process}"
+
+    fake_writer = SummaryWriter(f"{log_dir}/fake")
+    real_writer = SummaryWriter(f"{log_dir}/real")
+    bf_writer = SummaryWriter(f"{log_dir}/brightfield")
+    progress_writer = SummaryWriter(f"{log_dir}/progress")
 
     # Save parameters to tensorboard
     progress_writer.add_text('Parameters', f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}", 0)
@@ -80,6 +85,16 @@ def train_model(training_params):
     for epoch in range(EPOCHS):
         logging_time = 0
         print(f"Epoch {epoch}")
+
+        if epoch == 0 and SAVE_MODEL:
+            save_start_time = time.time()
+            torch.save(generator.state_dict(), f"{log_dir}/generator.pt")
+            torch.save(discriminator.state_dict(), f"{log_dir}/discriminator.pt")
+            print(f"Model saved in {round(time.time() - save_start_time, 2)} seconds")
+            torch.save(generator.state_dict(), f"runs/generator_{time_stamp}.pt")
+            #torch.save(discriminator.state_dict(), f"runs/discriminator_{time_stamp}.pt")
+
+            input("Press Enter to continue...")
 
         for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
             start_time = time.time()
@@ -191,5 +206,5 @@ def train_model(training_params):
     # test model
     # save model
     if SAVE_MODEL:
-        torch.save(generator.state_dict(), f"runs/generator_{time_stamp}.pt")
-        torch.save(discriminator.state_dict(), f"runs/discriminator_{time_stamp}.pt")
+        torch.save(generator.state_dict(), f"{log_dir}/generator.pt")
+        torch.save(discriminator.state_dict(), f"{log_dir}/discriminator.pt")
