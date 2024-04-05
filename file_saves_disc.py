@@ -11,10 +11,10 @@ while True:
         if print_files:
             print(file)
         # If file ends with .pt it is a model and needs to be named with the current time
-        if file.endswith(".pt") and not file in changed_files:
+        if file.endswith(".pt") and file.startswith("discriminator_") and not file in changed_files:
             # wait for the file to be fully written
             print(f"Waiting for {file} to be fully written...")
-            time.sleep(1)
+            time.sleep(0.5)
             # Get the current time
             current_time = time.strftime("%Y%m%d-%H%M%S")
             # Split the file name into the name and the extension
