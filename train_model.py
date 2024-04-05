@@ -64,11 +64,14 @@ def train_model(training_params):
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
 
     # Add writers for tensorboard
+    import multiprocessing
+    process = multiprocessing.current_process().name
+
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    fake_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/fake")
-    real_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/real")
-    bf_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/brightfield")
-    progress_writer = SummaryWriter(f"runs/{time_stamp}_{L2_LAMBDA}/progress")
+    fake_writer = SummaryWriter(f"runs/{time_stamp}_{process}/fake")
+    real_writer = SummaryWriter(f"runs/{time_stamp}_{process}/real")
+    bf_writer = SummaryWriter(f"runs/{time_stamp}_{process}/brightfield")
+    progress_writer = SummaryWriter(f"runs/{time_stamp}_{process}/progress")
 
     # Save parameters to tensorboard
     progress_writer.add_text('Parameters', f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}", 0)
