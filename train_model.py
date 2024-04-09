@@ -66,14 +66,22 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
             first = True
             good_runs[run] = val
 
+    for key in good_runs:
+        print(key, good_runs[key])
+
+
     # Get the key for this run
     key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {9}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
 
+    print()
+    print(key)
+    print()
 
     model_dir = None
     try:
         model_dir = good_runs[key]
     except KeyError:
+        print("Key not found")
         return
 
     if loader == False:
