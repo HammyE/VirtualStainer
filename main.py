@@ -81,7 +81,6 @@ def display_images():
     # Show the plot
     plt.show()
 
-
 if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
