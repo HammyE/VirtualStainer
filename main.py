@@ -87,15 +87,15 @@ if __name__ == '__main__':
     TILE_SIZE = 128
     DEPTH_PADDING = 2
     OVERLAP = TILE_SIZE // 2
-    PIC_BATCH_SIZE = 2
-    BATCH_SIZE = 4
-    EPOCHS = 300
+    PIC_BATCH_SIZE = 3
+    BATCH_SIZE = 8
+    EPOCHS = 20
     LEARNING_RATE = 0.002
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
     L1_LAMBDA = 0.1
-    L2_LAMBDA = 0.1
+    L2_LAMBDA = 0.01
 
     # For M1 Macs check for mps
     if DEVICE.type == 'cpu':
@@ -117,6 +117,8 @@ if __name__ == '__main__':
             DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         elif u_device == 'cpu':
             DEVICE = torch.device('cpu')
+    if '-lr' in sys.argv:
+        LEARNING_RATE = float(sys.argv[sys.argv.index('-lr') + 1])
 
     x = torch.ones(1, device=DEVICE)
     print(x)

@@ -66,7 +66,6 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
             first = True
             good_runs[run] = val
 
-
     # Get the key for this run
     key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {9}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
 
@@ -98,7 +97,6 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
     x = torch.ones(1, device=DEVICE)
     print(x)
 
-
     # train model
     generator = GeneratorNetwork(out_channels=2,
                                  image_size=TILE_SIZE,
@@ -111,6 +109,7 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
     discriminator.to(DEVICE)
 
     g_loss_fn = torch.nn.BCELoss()
+    l1_loss_fn = torch.nn.L1Loss()
     d_loss_fn = torch.nn.BCELoss()
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE)
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
@@ -128,7 +127,9 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
     progress_writer = SummaryWriter(f"{log_dir}/progress")
 
     # Save parameters to tensorboard
-    progress_writer.add_text('Parameters', f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}", 0)
+    progress_writer.add_text('Parameters',
+                             f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
+                             0)
 
     # load model
     generator.load_state_dict(torch.load(f"{log_dir}/generator.pt"))
@@ -144,8 +145,8 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
             torch.save(generator.state_dict(), f"{log_dir}/generator.pt")
             torch.save(discriminator.state_dict(), f"{log_dir}/discriminator.pt")
             print(f"Model saved in {round(time.time() - save_start_time, 2)} seconds")
-            #torch.save(generator.state_dict(), f"runs/generator_{time_stamp}.pt")
-            #torch.save(discriminator.state_dict(), f"runs/discriminator_{time_stamp}.pt")
+            # torch.save(generator.state_dict(), f"runs/generator_{time_stamp}.pt")
+            # torch.save(discriminator.state_dict(), f"runs/discriminator_{time_stamp}.pt")
 
         for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
             start_time = time.time()
@@ -185,9 +186,10 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
 
             disc_fake_outputs = discriminator(bf_channels, outputs)
 
-            g_loss = (g_loss_fn(disc_fake_outputs, disc_labels_true_labels) +
-                      L1_LAMBDA * torch.nn.L1Loss()(outputs, true_fluorescent) +
-                      L2_LAMBDA * torch.nn.MSELoss()(outputs, true_fluorescent))
+            g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true_labels) + \
+                     L1_LAMBDA * torch.nn.L1Loss()(outputs, true_fluorescent) + \
+                     L2_LAMBDA * torch.nn.MSELoss()(outputs, true_fluorescent) + \
+                     0.5 * l1_loss_fn(outputs, true_fluorescent)
 
             generator.zero_grad()
 
@@ -212,7 +214,7 @@ LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
                 dead_sample_gen = outputs[indeces, 0]
                 live_sample_gen = outputs[indeces, 1]
 
-                # create channels to accomodate colors
+                # create channels to accommodate colors
                 dead_sample_gen = dead_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
                 dead_sample_gen = torch.cat((dead_sample_gen * 0.1, dead_sample_gen * 0.8, dead_sample_gen * 0), 1)
 
