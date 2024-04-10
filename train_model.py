@@ -132,8 +132,12 @@ def train_model(training_params):
                              0)
 
     # load model
-    generator.load_state_dict(torch.load(f"{log_dir}/generator.pt"))
-    discriminator.load_state_dict(torch.load(f"{log_dir}/discriminator.pt"))
+    try:
+        generator.load_state_dict(torch.load(f"{log_dir}/generator.pt"))
+        discriminator.load_state_dict(torch.load(f"{log_dir}/discriminator.pt"))
+        print("Model loaded")
+    except FileNotFoundError:
+        print("Model not found")
 
     logging_steps = 0
     for epoch in range(EPOCHS):
