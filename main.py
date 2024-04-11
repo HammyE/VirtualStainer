@@ -179,7 +179,7 @@ if __name__ == '__main__':
          'SAVE_MODEL': SAVE_MODEL,
          'L1_LAMBDA': L1_LAMBDA,
          'L2_LAMBDA': L2_LAMBDA,
-         'DEVICE': DEVICE
+         'DEVICE': DEVICE,
          'G_LR': G_LR,
          'D_LR': D_LR}
     )
