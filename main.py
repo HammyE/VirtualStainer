@@ -96,6 +96,9 @@ if __name__ == '__main__':
     L1_LAMBDA = 0.1
     L2_LAMBDA = 0.01
 
+    G_LR = 0.002
+    D_LR = 0.01
+
     # For M1 Macs check for mps
     if DEVICE.type == 'cpu':
         if torch.backends.mps.is_available():
@@ -176,7 +179,9 @@ if __name__ == '__main__':
          'SAVE_MODEL': SAVE_MODEL,
          'L1_LAMBDA': L1_LAMBDA,
          'L2_LAMBDA': L2_LAMBDA,
-         'DEVICE': DEVICE}
+         'DEVICE': DEVICE
+         'G_LR': G_LR,
+         'D_LR': D_LR}
     )
 
     # extract materials

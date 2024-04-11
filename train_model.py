@@ -3,12 +3,49 @@ import time
 import numpy as np
 import torch
 import torchvision
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from DiscriminatorNetwork import DiscriminatorNetwork
 from GeneratorNetwork import GeneratorNetwork
 from dataset import custom_collate_fn
+
+
+class AsymmetricL2Loss(nn.Module):
+    def __init__(self, underestimation_weight=2.0):
+        """
+        Initializes the AsymmetricL2Loss module.
+
+        Parameters:
+        underestimation_weight (float): The weight applied to the loss for underestimations.
+                                        A value greater than 1.0 increases the penalty for underestimations.
+        """
+        super(AsymmetricL2Loss, self).__init__()
+        self.underestimation_weight = underestimation_weight
+
+    def forward(self, predictions, targets):
+        """
+        Forward pass of the loss function.
+
+        Parameters:
+        predictions (torch.Tensor): The predicted values from the model.
+        targets (torch.Tensor): The actual target values.
+
+        Returns:
+        torch.Tensor: The computed asymmetric L2 loss.
+        """
+        # Calculate the difference between predictions and targets
+        diff = predictions - targets
+
+        # Apply a higher weight to negative differences (underestimations)
+        weights = torch.where(diff < 0, self.underestimation_weight, 1.0)
+
+        # Calculate the weighted L2 loss
+        weighted_squared_diff = weights * (diff ** 2)
+        loss = weighted_squared_diff.mean()  # Mean over all elements
+
+        return loss
 
 
 def train_model(training_params):
@@ -24,6 +61,9 @@ def train_model(training_params):
     L1_LAMBDA = training_params.get('L1_LAMBDA', 0.01)
     L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
+
+    G_LR = training_params.get('G_LR', LEARNING_RATE)
+    D_LR = training_params.get('D_LR', LEARNING_RATE)
 
     try:
         print(f"Training process {training_params['Process']}")
@@ -110,9 +150,10 @@ def train_model(training_params):
 
     g_loss_fn = torch.nn.BCELoss()
     l1_loss_fn = torch.nn.L1Loss()
+    weighted_l2 = AsymmetricL2Loss(underestimation_weight=2.0)
     d_loss_fn = torch.nn.BCELoss()
-    g_optimizer = torch.optim.Adam(generator.parameters(), lr=LEARNING_RATE)
-    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
+    g_optimizer = torch.optim.Adam(generator.parameters(), lr=G_LR)
+    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
     # Add writers for tensorboard
     import multiprocessing
@@ -138,6 +179,11 @@ def train_model(training_params):
         print("Model loaded")
     except FileNotFoundError:
         print("Model not found")
+
+    # Extract test images
+    images = next(iter(loader))
+    bf_channels = images[0].to(DEVICE)
+    true_fluorescent = images[1].to(DEVICE)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
@@ -193,7 +239,8 @@ def train_model(training_params):
             g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true_labels) + \
                      L1_LAMBDA * torch.nn.L1Loss()(outputs, true_fluorescent) + \
                      L2_LAMBDA * torch.nn.MSELoss()(outputs, true_fluorescent) + \
-                     0.5 * l1_loss_fn(outputs, true_fluorescent)
+                     0.5 * l1_loss_fn(outputs, true_fluorescent) + \
+                     0.5 * weighted_l2(outputs, true_fluorescent)
 
             generator.zero_grad()
 
