@@ -262,7 +262,7 @@ def train_model(training_params):
                 live_sample = test_true_fluorescent[indeces, 1]
                 bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
 
-                test_outputs = generator(bf_sample)
+                test_outputs = generator(bf_channels)
 
                 dead_sample_gen = test_outputs[indeces, 0]
                 live_sample_gen = test_outputs[indeces, 1]
