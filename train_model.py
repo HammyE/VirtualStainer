@@ -181,9 +181,9 @@ def train_model(training_params):
         print("Model not found")
 
     # Extract test images
-    images = next(iter(loader))
-    test_bf_channels = images.to(DEVICE)
-    test_true_fluorescent = images.to(DEVICE)
+    bf_channels, true_fluorescent = next(iter(loader))
+    test_bf_channels = bf_channels.to(DEVICE)
+    test_true_fluorescent = true_fluorescent.to(DEVICE)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
