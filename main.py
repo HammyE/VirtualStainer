@@ -122,6 +122,12 @@ if __name__ == '__main__':
     if '-lr' in sys.argv:
         LEARNING_RATE = float(sys.argv[sys.argv.index('-lr') + 1])
 
+    if '-g_lr' in sys.argv:
+        G_LR = float(sys.argv[sys.argv.index('-g_lr') + 1])
+
+    if '-d_lr' in sys.argv:
+        D_LR = float(sys.argv[sys.argv.index('-d_lr') + 1])
+
     if '-dn' in sys.argv:
         device_number = int(sys.argv[sys.argv.index('-dn') + 1])
         torch.cuda.set_device('cuda:' + str(device_number))

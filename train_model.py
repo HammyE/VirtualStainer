@@ -182,8 +182,8 @@ def train_model(training_params):
 
     # Extract test images
     images = next(iter(loader))
-    test_bf_channels = images[0].to(DEVICE)
-    test_true_fluorescent = images[1].to(DEVICE)
+    test_bf_channels = images.to(DEVICE)
+    test_true_fluorescent = images.to(DEVICE)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
