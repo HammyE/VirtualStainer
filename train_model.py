@@ -182,8 +182,8 @@ def train_model(training_params):
 
     # Extract test images
     images = next(iter(loader))
-    bf_channels = images[0].to(DEVICE)
-    true_fluorescent = images[1].to(DEVICE)
+    test_bf_channels = images[0].to(DEVICE)
+    test_true_fluorescent = images[1].to(DEVICE)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
@@ -258,12 +258,14 @@ def train_model(training_params):
                 # extract indeces for 4 different images
 
                 indeces = np.arange(0, 4) * PIC_BATCH_SIZE
-                dead_sample = true_fluorescent[indeces, 0]
-                live_sample = true_fluorescent[indeces, 1]
-                bf_sample = bf_channels[indeces, DEPTH_PADDING]
+                dead_sample = test_true_fluorescent[indeces, 0]
+                live_sample = test_true_fluorescent[indeces, 1]
+                bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
 
-                dead_sample_gen = outputs[indeces, 0]
-                live_sample_gen = outputs[indeces, 1]
+                test_outputs = generator(bf_sample)
+
+                dead_sample_gen = test_outputs[indeces, 0]
+                live_sample_gen = test_outputs[indeces, 1]
 
                 # create channels to accommodate colors
                 dead_sample_gen = dead_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
