@@ -209,6 +209,7 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
 
         bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+        bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
 
         print(bf_sample.shape)
 
