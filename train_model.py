@@ -122,6 +122,7 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         print(f"Using params {key}")
     except KeyError:
         print("Key not found")
+        print(f"Using params {key}")
         return
 
     if loader == False:
