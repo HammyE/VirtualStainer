@@ -210,9 +210,13 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
 
         bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
 
+        print(bf_sample.shape)
+
         dead_real_grid = torchvision.utils.make_grid(dead_sample)
         live_real_grid = torchvision.utils.make_grid(live_sample)
         bf_real_grid = torchvision.utils.make_grid(bf_sample)
+
+        print(bf_real_grid.shape)
 
         test_writer.add_images('brightfield', bf_real_grid, 0)
         test_writer.add_images('live_fluorescent', live_real_grid, 0)
