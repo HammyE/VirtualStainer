@@ -95,35 +95,35 @@ def train_model(training_params):
 # """
 #
 #     # Make dictionary of good run params
-    training_param_string = """20240411-170345_MainProcess
-LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01
-20240411-170348_MainProcess
-LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01"""
-
-
-    good_runs = {}
-    first = True
-    val = ""
-    for run in training_param_string.split("\n"):
-        if first:
-            val = run
-            first = False
-        else:
-            first = True
-            good_runs[run] = val
-
-    # Get the key for this run
-    key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
-
-    model_dir = None
-    try:
-        model_dir = good_runs[key]
-        print(f"Model found: {model_dir}")
-        print(f"Using params {key}")
-    except KeyError:
-        print("Key not found")
-        print(f"Using params {key}")
-        return
+#     training_param_string = """20240411-170345_MainProcess
+# LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01
+# 20240411-170348_MainProcess
+# LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01"""
+#
+#
+#     good_runs = {}
+#     first = True
+#     val = ""
+#     for run in training_param_string.split("\n"):
+#         if first:
+#             val = run
+#             first = False
+#         else:
+#             first = True
+#             good_runs[run] = val
+#
+#     # Get the key for this run
+#     key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
+#
+#     model_dir = None
+#     try:
+#         model_dir = good_runs[key]
+#         print(f"Model found: {model_dir}")
+#         print(f"Using params {key}")
+#     except KeyError:
+#         print("Key not found")
+#         print(f"Using params {key}")
+#         return
 
     if loader == False:
         dataset = training_params.get('dataset', None)
@@ -169,8 +169,8 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
 
     log_dir = f"runs/{time_stamp}_{process}"
-    if model_dir is not None:
-        log_dir = f"runs/{model_dir}"
+    # if model_dir is not None:
+    #     log_dir = f"runs/{model_dir}"
 
     fake_writer = SummaryWriter(f"{log_dir}/fake")
     real_writer = SummaryWriter(f"{log_dir}/real")
