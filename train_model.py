@@ -95,10 +95,10 @@ def train_model(training_params):
 # """
 #
 #     # Make dictionary of good run params
-    training_param_string = training_params.get("""20240411-170345_MainProcess
+    training_param_string = """20240411-170345_MainProcess
 LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01
 20240411-170348_MainProcess
-LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01""")
+LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01"""
 
 
     good_runs = {}
