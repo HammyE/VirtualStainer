@@ -167,7 +167,10 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
     process = multiprocessing.current_process().name
 
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
+
     log_dir = f"runs/{time_stamp}_{process}"
+    if model_dir is not None:
+        log_dir = f"runs/{model_dir}"
 
     fake_writer = SummaryWriter(f"{log_dir}/fake")
     real_writer = SummaryWriter(f"{log_dir}/real")
