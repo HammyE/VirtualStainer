@@ -217,7 +217,6 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         test_writer.add_images('brightfield', bf_real_grid, 0)
         test_writer.add_images('live_fluorescent', live_real_grid, 0)
         test_writer.add_images('dead_fluorescent', dead_real_grid, 0)
-        reply = input("Which one do you like?")
         if input("Good enough?") == "y":
             break
 
