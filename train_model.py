@@ -217,6 +217,7 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         live_real_grid = torchvision.utils.make_grid(live_sample)
         bf_real_grid = torchvision.utils.make_grid(bf_sample)
 
+        print(dead_real_grid.shape)
         print(bf_real_grid.shape)
 
         test_writer.add_images('brightfield', bf_real_grid, 0)
