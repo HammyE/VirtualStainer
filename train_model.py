@@ -209,7 +209,7 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
 
         bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-        bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
+        #bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
 
         print(bf_sample.shape)
 
@@ -220,9 +220,9 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         print(dead_real_grid.shape)
         print(bf_real_grid.shape)
 
-        test_writer.add_images('brightfield', bf_real_grid, 0)
-        test_writer.add_images('live_fluorescent', live_real_grid, 0)
-        test_writer.add_images('dead_fluorescent', dead_real_grid, 0)
+        test_writer.add_image('brightfield', bf_real_grid, 0)
+        test_writer.add_image('live_fluorescent', live_real_grid, 0)
+        test_writer.add_image('dead_fluorescent', dead_real_grid, 0)
         if input("Good enough?") == "y":
             break
 
