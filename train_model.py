@@ -197,16 +197,29 @@ LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPO
         bf_channels, true_fluorescent = next(iter_loader)
         test_bf_channels = bf_channels.to(DEVICE)
         test_true_fluorescent = true_fluorescent.to(DEVICE)
-        test_writer.add_images('brightfield', test_bf_channels, 0)
-        test_writer.add_images('true_fluorescent', test_true_fluorescent, 0)
+        indeces = np.arange(0, 4) * PIC_BATCH_SIZE
+        dead_sample = test_true_fluorescent[indeces, 0]
+        live_sample = test_true_fluorescent[indeces, 1]
+        bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
+
+        dead_sample = dead_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+        dead_sample = torch.cat((dead_sample * 0.1, dead_sample * 0.8, dead_sample * 0), 1)
+
+        live_sample = live_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+        live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
+
+        bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+
+        dead_real_grid = torchvision.utils.make_grid(dead_sample)
+        live_real_grid = torchvision.utils.make_grid(live_sample)
+        bf_real_grid = torchvision.utils.make_grid(bf_sample)
+
+        test_writer.add_images('brightfield', bf_real_grid, 0)
+        test_writer.add_images('live_fluorescent', live_real_grid, 0)
+        test_writer.add_images('dead_fluorescent', dead_real_grid, 0)
         reply = input("Which one do you like?")
-        try:
-            fave = int(reply)
-            bf_channels = bf_channels[fave:fave+4].to(DEVICE)
-            true_fluorescent = true_fluorescent[fave:fave+4].to(DEVICE)
+        if input("Good enough?") == "y":
             break
-        except ValueError:
-            print("try a new set of images")
 
     logging_steps = 0
     for epoch in range(EPOCHS):
