@@ -95,28 +95,34 @@ def train_model(training_params):
 # """
 #
 #     # Make dictionary of good run params
-#     good_runs = {}
-#     first = True
-#     val = ""
-#     for run in training_param_string.split("\n"):
-#         if first:
-#             val = run
-#             first = False
-#         else:
-#             first = True
-#             good_runs[run] = val
-#
-#     # Get the key for this run
-#     key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {9}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
-#
-#     model_dir = None
-#     try:
-#         model_dir = good_runs[key]
-#         print(f"Model found: {model_dir}")
-#         print(f"Using params {key}")
-#     except KeyError:
-#         print("Key not found")
-#         return
+    training_param_string = training_params.get("""20240411-170345_MainProcess
+LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01
+20240411-170348_MainProcess
+LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01""")
+
+
+    good_runs = {}
+    first = True
+    val = ""
+    for run in training_param_string.split("\n"):
+        if first:
+            val = run
+            first = False
+        else:
+            first = True
+            good_runs[run] = val
+
+    # Get the key for this run
+    key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {9}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
+
+    model_dir = None
+    try:
+        model_dir = good_runs[key]
+        print(f"Model found: {model_dir}")
+        print(f"Using params {key}")
+    except KeyError:
+        print("Key not found")
+        return
 
     if loader == False:
         dataset = training_params.get('dataset', None)
@@ -166,6 +172,7 @@ def train_model(training_params):
     real_writer = SummaryWriter(f"{log_dir}/real")
     bf_writer = SummaryWriter(f"{log_dir}/brightfield")
     progress_writer = SummaryWriter(f"{log_dir}/progress")
+    test_writer = SummaryWriter(f"{log_dir}/test")
 
     # Save parameters to tensorboard
     progress_writer.add_text('Parameters',
@@ -181,9 +188,21 @@ def train_model(training_params):
         print("Model not found")
 
     # Extract test images
-    bf_channels, true_fluorescent = next(iter(loader))
-    test_bf_channels = bf_channels.to(DEVICE)
-    test_true_fluorescent = true_fluorescent.to(DEVICE)
+    iter_loader = iter(loader)
+    while True:
+        bf_channels, true_fluorescent = next(iter_loader)
+        test_bf_channels = bf_channels.to(DEVICE)
+        test_true_fluorescent = true_fluorescent.to(DEVICE)
+        test_writer.add_images('brightfield', test_bf_channels, 0)
+        test_writer.add_images('true_fluorescent', test_true_fluorescent, 0)
+        reply = input("Which one do you like?")
+        try:
+            fave = int(reply)
+            bf_channels = bf_channels[fave:fave+4].to(DEVICE)
+            true_fluorescent = true_fluorescent[fave:fave+4].to(DEVICE)
+            break
+        except ValueError:
+            print("try a new set of images")
 
     logging_steps = 0
     for epoch in range(EPOCHS):
