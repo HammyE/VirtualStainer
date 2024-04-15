@@ -290,66 +290,67 @@ def train_model(training_params):
 
             # Display one pair of real and generated images
             if time.time() - logging_time > 60:
-                print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
-                      f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
-                      )
+                with torch.no_grad:
+                    print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
+                          f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
+                          )
 
-                logging_time = time.time()
+                    logging_time = time.time()
 
-                # extract indeces for 4 different images
+                    # extract indeces for 4 different images
 
-                indeces = np.arange(0, 4) * PIC_BATCH_SIZE
-                dead_sample = test_true_fluorescent[indeces, 0]
-                live_sample = test_true_fluorescent[indeces, 1]
-                bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
+                    indeces = np.arange(0, 4) * PIC_BATCH_SIZE
+                    dead_sample = test_true_fluorescent[indeces, 0]
+                    live_sample = test_true_fluorescent[indeces, 1]
+                    bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
 
-                test_outputs = generator(bf_channels)
+                    test_outputs = generator(bf_channels)
 
-                dead_sample_gen = test_outputs[indeces, 0]
-                live_sample_gen = test_outputs[indeces, 1]
+                    dead_sample_gen = test_outputs[indeces, 0]
+                    live_sample_gen = test_outputs[indeces, 1]
 
-                # create channels to accommodate colors
-                dead_sample_gen = dead_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
-                dead_sample_gen = torch.cat((dead_sample_gen * 0.1, dead_sample_gen * 0.8, dead_sample_gen * 0), 1)
+                    # create channels to accommodate colors
+                    dead_sample_gen = dead_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
+                    dead_sample_gen = torch.cat((dead_sample_gen * 0.1, dead_sample_gen * 0.8, dead_sample_gen * 0), 1)
 
-                live_sample_gen = live_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
-                live_sample_gen = torch.cat((live_sample_gen * 0.9, live_sample_gen * 0.8, live_sample_gen * 0), 1)
+                    live_sample_gen = live_sample_gen.view(-1, 1, TILE_SIZE, TILE_SIZE)
+                    live_sample_gen = torch.cat((live_sample_gen * 0.9, live_sample_gen * 0.8, live_sample_gen * 0), 1)
 
-                dead_sample = dead_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-                dead_sample = torch.cat((dead_sample * 0.1, dead_sample * 0.8, dead_sample * 0), 1)
+                    dead_sample = dead_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+                    dead_sample = torch.cat((dead_sample * 0.1, dead_sample * 0.8, dead_sample * 0), 1)
 
-                live_sample = live_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-                live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
+                    live_sample = live_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+                    live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
 
-                bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+                    bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
 
-                dead_real_grid = torchvision.utils.make_grid(dead_sample)
-                live_real_grid = torchvision.utils.make_grid(live_sample)
-                bf_real_grid = torchvision.utils.make_grid(bf_sample)
-                dead_fake_grid = torchvision.utils.make_grid(dead_sample_gen)
-                live_fake_grid = torchvision.utils.make_grid(live_sample_gen)
+                    dead_real_grid = torchvision.utils.make_grid(dead_sample)
+                    live_real_grid = torchvision.utils.make_grid(live_sample)
+                    bf_real_grid = torchvision.utils.make_grid(bf_sample)
+                    dead_fake_grid = torchvision.utils.make_grid(dead_sample_gen)
+                    live_fake_grid = torchvision.utils.make_grid(live_sample_gen)
 
-                real_writer.add_image('dead', dead_real_grid, logging_steps)
-                real_writer.add_image('live', live_real_grid, logging_steps)
-                bf_writer.add_image('input', bf_real_grid, logging_steps)
-                fake_writer.add_image('dead', dead_fake_grid, logging_steps)
-                fake_writer.add_image('live', live_fake_grid, logging_steps)
+                    real_writer.add_image('dead', dead_real_grid, logging_steps)
+                    real_writer.add_image('live', live_real_grid, logging_steps)
+                    bf_writer.add_image('input', bf_real_grid, logging_steps)
+                    fake_writer.add_image('dead', dead_fake_grid, logging_steps)
+                    fake_writer.add_image('live', live_fake_grid, logging_steps)
 
-                # log losses
-                progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
-                progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
+                    # log losses
+                    progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
+                    progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
 
-                # accuracy
-                disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
-                disc_fake_outputs = disc_fake_outputs.detach().cpu().numpy()
-                disc_true_outputs = np.round(disc_true_outputs)
-                disc_fake_outputs = np.round(disc_fake_outputs)
-                true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
-                fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
-                progress_writer.add_scalar('True Accuracy', true_accuracy, logging_steps)
-                progress_writer.add_scalar('Fake Accuracy', fake_accuracy, logging_steps)
+                    # accuracy
+                    disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
+                    disc_fake_outputs = disc_fake_outputs.detach().cpu().numpy()
+                    disc_true_outputs = np.round(disc_true_outputs)
+                    disc_fake_outputs = np.round(disc_fake_outputs)
+                    true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
+                    fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
+                    progress_writer.add_scalar('True Accuracy', true_accuracy, logging_steps)
+                    progress_writer.add_scalar('Fake Accuracy', fake_accuracy, logging_steps)
 
-                logging_steps += 1
+                    logging_steps += 1
     # test model
     # save model
     if SAVE_MODEL:
