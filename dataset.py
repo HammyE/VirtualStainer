@@ -179,8 +179,8 @@ class HarmonyDataset(Dataset):
                 live_img = cv2.imread(live, cv2.IMREAD_GRAYSCALE)
                 dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
                 live_img = equalize(live_img, self.equalization_params_live[measurement])
-                #flourescent_intensity_list.append(np.max([np.mean(live_img), np.mean(dead_img)]))
-                flourescent_intensity_list.append(np.mean(live_img))
+                flourescent_intensity_list.append(np.max([np.mean(live_img), np.mean(dead_img)]))
+                #flourescent_intensity_list.append(np.mean(live_img))
 
             # Fit the curve to a gaussian curve
             x = np.arange(0, len(blur_list), 1)
