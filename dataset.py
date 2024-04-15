@@ -166,18 +166,30 @@ class HarmonyDataset(Dataset):
             self.depths[well] = np.load(os.path.join(self.root, measurement, "depths", well + ".npy"))
             if self.debug: print(f"Depths for well {well} already exist.")
         else:
+            flourescent_intensity_list = []
             blur_list = []
             mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
             for img in self.bf_stacks[well]:
                 img = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
                 img = equalize(img, self.equalization_params_brightfield[measurement])
                 blur_list.append(get_blur(img, mask))
+
+            for dead, live in zip(self.dead_stacks[well], self.live_stacks[well]):
+                dead_img = cv2.imread(dead, cv2.IMREAD_GRAYSCALE)
+                live_img = cv2.imread(live, cv2.IMREAD_GRAYSCALE)
+                dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
+                live_img = equalize(live_img, self.equalization_params_live[measurement])
+                #flourescent_intensity_list.append(np.max([np.mean(live_img), np.mean(dead_img)]))
+                flourescent_intensity_list.append(np.mean(live_img))
+
             # Fit the curve to a gaussian curve
             x = np.arange(0, len(blur_list), 1)
             y = np.array(blur_list)
+            y = np.array(flourescent_intensity_list)
             # Fit the curve to a gaussian curve
             try:
                 popt, pcov = curve_fit(gaussian, x, y, p0=[1, 1, 1])
+                popt, pcov = curve_fit(gaussian, x, flourescent_intensity_list, p0=[1, 1, 1])
             except:
 
                 max_y = np.max(y)
@@ -243,11 +255,23 @@ class HarmonyDataset(Dataset):
                 try:
                     for i in range(0, n_layers, int(n_layers / 16)):
                         img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                        dead = cv2.imread(self.dead_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                        live = cv2.imread(self.live_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+
+                        dead = equalize(dead, self.equalization_params_dead[measurement])
+                        live = equalize(live, self.equalization_params_live[measurement])
+
                         img = equalize(img, self.equalization_params_brightfield[measurement])
                         img = 255 - img
+
+                        img = np.zeros_like(img)
+
+                        # join the images
+                        img = np.stack([dead, live, img], axis=2)
+
                         img = img[left:right, top:bottom]
                         ax = axs[idx // n_images_row, idx % n_images_row]
-                        ax.imshow(img, cmap='gray')
+                        ax.imshow(img, vmin=0, vmax=1000)#, cmap='gray')
                         ax.axis('off')
                         ax.title.set_text(f"Layer {i}")
                         idx += 1
@@ -361,10 +385,9 @@ class HarmonyDataset(Dataset):
                     all_images_live.append(img.replace("ch3", "ch2"))
 
             # load images
-            self.equalization_params_brightfield[plate] = get_equalization_params(
-                all_images_brightfield)
-            self.equalization_params_dead[plate] = get_equalization_params(all_images_dead)
-            self.equalization_params_live[plate] = get_equalization_params(all_images_live)
+            self.equalization_params_brightfield[plate] = get_equalization_params(all_images_brightfield)
+            self.equalization_params_dead[plate] = get_equalization_params(all_images_dead, [0.01, 0.999])
+            self.equalization_params_live[plate] = get_equalization_params(all_images_live, [0.01, 0.999])
 
             if self.debug: print("Saving equalization params...")
             bf_params = np.array(self.equalization_params_brightfield[plate])
@@ -390,252 +413,249 @@ class HarmonyDataset(Dataset):
 
     def __getitem__(self, idx):
 
+        try:
+
+            well_idx = idx // self.depth_range
+            depth_idx = idx % self.depth_range
+
+            if self.debug: print(f"Getting well... {self.wells[well_idx]}")
             try:
+                if self.debug: print(f"Getting depth... {self.depths[self.wells[well_idx]][depth_idx]}")
+            except Exception as e:
+                if self.debug: print(f"Depth not found for well {self.wells[well_idx]}")
+                if self.debug: print(f"Depth index: {depth_idx}")
+                if self.debug: print(f"Depths: {self.depths[self.wells[well_idx]]}")
+                raise e
 
-                well_idx = idx // self.depth_range
-                depth_idx = idx % self.depth_range
+            well = self.wells[well_idx]
 
-                if self.debug: print(f"Getting well... {self.wells[well_idx]}")
+            # To make sure that all the depths of a well are used before repeating
+            depth = self.depths[well][depth_idx]
+
+            measurement = well.split("f")[0][:-6]
+
+            x = torch.tensor(
+                np.zeros((self.picture_batch_size, self.depth_padding * 2 + 1, self.tile_size, self.tile_size)))
+            y = torch.tensor(np.zeros((self.picture_batch_size, 2, self.tile_size, self.tile_size)))
+
+            bf_images = []
+
+            skipped_tiles = 0
+
+            if self.debug:
+                plt_pic = 0
+                plt.figure(figsize=(10, 20))
+
+            for i in range(depth - self.depth_padding, depth + self.depth_padding + 1):
                 try:
-                    if self.debug: print(f"Getting depth... {self.depths[self.wells[well_idx]][depth_idx]}")
-                except Exception as e:
-                    if self.debug: print(f"Depth not found for well {self.wells[well_idx]}")
-                    if self.debug: print(f"Depth index: {depth_idx}")
-                    if self.debug: print(f"Depths: {self.depths[self.wells[well_idx]]}")
+                    bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                    bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
+                    bf_images.append(bf_img)
+                except IndexError as e:
+                    for img in self.bf_stacks[well]:
+                        print(img)
+                    print(f"Index error: {well}, {i}")
+                    print(f"Depth: {depth}")
                     raise e
 
-                well = self.wells[well_idx]
+            dead_img = cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
+            live_img = cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
 
-                # To make sure that all the depths of a well are used before repeating
-                depth = self.depths[well][depth_idx]
+            dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
+            live_img = equalize(live_img, self.equalization_params_live[measurement])
 
-                measurement = well.split("f")[0][:-6]
+            mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+            try:
+                potential_centers = np.load(self.potential_centers[well])
+            except Exception as e:
+                print("Recreating potential centers")
+                min_pos = self.tile_size / 2 + 1
+                max_pos = self.image_size - self.tile_size / 2 - 1
 
-                x = torch.tensor(
-                    np.zeros((self.picture_batch_size, self.depth_padding * 2 + 1, self.tile_size, self.tile_size)))
-                y = torch.tensor(np.zeros((self.picture_batch_size, 2, self.tile_size, self.tile_size)))
-
-                bf_images = []
-
-                skipped_tiles = 0
-
-                if self.debug:
-                    plt_pic = 0
-                    plt.figure(figsize=(10, 20))
-
-                for i in range(depth - self.depth_padding, depth + self.depth_padding + 1):
-                    try:
-                        bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
-                        bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
-                        bf_images.append(bf_img)
-                    except IndexError as e:
-                        for img in self.bf_stacks[well]:
-                            print(img)
-                        print(f"Index error: {well}, {i}")
-                        print(f"Depth: {depth}")
-                        raise e
-
-                dead_img = cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
-                live_img = cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
-
-                dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
-                live_img = equalize(live_img, self.equalization_params_live[measurement])
-
-                mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
-                try:
-                    potential_centers = np.load(self.potential_centers[well])
-                except Exception as e:
-                        print("Recreating potential centers")
-                        min_pos = self.tile_size / 2 + 1
-                        max_pos = self.image_size - self.tile_size / 2 - 1
-
-                        potential_centers = np.argwhere(mask > 0)
-                        potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] < min_pos),
-                                                      axis=0)
-                        potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] > max_pos),
-                                                      axis=0)
-                        potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] < min_pos),
-                                                      axis=0)
-                        potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] > max_pos),
-                                                      axis=0)
-                        np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
-
-
-
-
-                for picture in range(self.picture_batch_size):
-                    valid_tile = False
-                    while valid_tile == False:
-                        center_idx = np.random.randint(0, len(potential_centers))
-                        center = potential_centers[center_idx]
-
-                        left = center[0] - round(self.tile_size / 2)
-                        right = center[0] + round(self.tile_size / 2)
-                        top = center[1] - round(self.tile_size / 2)
-                        bottom = center[1] + round(self.tile_size / 2)
-
-                        try:
-
-                            if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
-                                skipped_tiles += 1
-                                potential_centers = np.delete(potential_centers, center_idx, axis=0)
-                            else:
-                                valid_tile = True
-                        except IndexError as e:
-                            print(f"Index error: {well}, {depth}")
-                            print(f"Depth: {depth}")
-                            print(self.masks[well])
-                            print(center)
-                            print(left, right, top, bottom)
-
-                            plt.imshow(mask)
-                            plt.scatter(center[1], center[0], c='r', s=10, marker='x')
-                            # draw bounding box
-                            plt.plot([top, top], [right, left], 'b', linewidth=0.5)
-                            plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
-                            plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
-                            plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                            plt.savefig(f"error_{idx}.png")
-
-                            raise e
-
-                    horizontal_flip = np.random.rand() > 0.5
-                    vertical_flip = np.random.rand() > 0.5
-                    rotation = np.random.randint(0, 4)
-
-                    for i, bf_img in enumerate(bf_images):
-                        bf_tile = torch.tensor(bf_img[left:right, top:bottom])
-                        if horizontal_flip:
-                            bf_tile = torch.flip(bf_tile, [1])
-                        if vertical_flip:
-                            bf_tile = torch.flip(bf_tile, [0])
-                        if rotation > 0:
-                            bf_tile = torch.rot90(bf_tile, rotation, [0, 1])
-
-                        try:
-                            x[picture, i] = bf_tile
-                        except RuntimeError as e:
-                            print(f"Index error: {well}, {depth}")
-                            print(f"Depth: {depth}")
-                            print(f"Picture: {picture}")
-                            print(f"Image: {i}")
-                            print(f"Shape: {x.shape}")
-                            print(f"Tile shape: {bf_tile.shape}")
-                            print(f"Left: {left}, Right: {right}, Top: {top}, Bottom: {bottom}")
-
-                            plt.imshow(mask)
-                            plt.scatter(center[1], center[0], c='r', s=10, marker='x')
-                            # draw bounding box
-                            plt.plot([top, top], [right, left], 'b', linewidth=0.5)
-                            plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
-                            plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
-                            plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                            plt.savefig(f"error_{idx}.png")
-                            raise e
-
-                    dead_tile = torch.tensor(dead_img[left:right, top:bottom])
-                    live_tile = torch.tensor(live_img[left:right, top:bottom])
-
-                    if horizontal_flip:
-                        dead_tile = torch.flip(dead_tile, [1])
-                        live_tile = torch.flip(live_tile, [1])
-                    if vertical_flip:
-                        dead_tile = torch.flip(dead_tile, [0])
-                        live_tile = torch.flip(live_tile, [0])
-                    if rotation > 0:
-                        dead_tile = torch.rot90(dead_tile, rotation, [0, 1])
-                        live_tile = torch.rot90(live_tile, rotation, [0, 1])
-
-                    y[picture, 0] = dead_tile
-                    y[picture, 1] = live_tile
-
-                    if self.debug and plt_pic < 4:
-                        import matplotlib as mpl
-                        mpl.rcParams['figure.dpi'] = 300
-                        mpl.rcParams['font.size'] = 6
-
-                        plt.subplot(2, 1, 1)
-                        if plt_pic == 0:
-                            plt.imshow(bf_img, cmap='gray')
-                            plt.title('Brightfield')
-                            plt.axis('off')
-                        # Draw bounding box
-                        plt.plot([top, top], [right, left], 'b', linewidth=0.5)
-                        plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
-                        plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
-                        plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                        plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=0.5)
-
-                        plt.subplot(4, 2, 5)
-
-                        if plt_pic == 0:
-                            plt.imshow(mask, cmap='gray')
-                            plt.title('Mask')
-                            plt.axis('off')
-                        plt.plot([top, top], [right, left], 'b', linewidth=0.5)
-                        plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
-                        plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
-                        plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                        plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=0.5)
-
-                        plt_pic += 1
-
-                        row = 0 if plt_pic < 3 else 1
-                        col = plt_pic % 2 + 1
-
-                        plt.subplot(8, 4, row * 4 + col + 2 + 16)
-                        bf_tile = x[picture, 2]
-                        plt.imshow(bf_tile, cmap='gray')
-                        plt.title('Brightfield Tile ' + str(plt_pic))
-                        plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
-                        plt.axis('off')
-
-                        plt.subplot(8, 4, 8 + row * 4 + col + 16)
-                        plt.imshow(dead_tile, cmap='Greens')
-                        plt.title('Dead Tile ' + str(plt_pic))
-                        plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
-                        plt.axis('off')
-
-                        plt.subplot(8, 4, 10 + row * 4 + col + 16)
-                        plt.imshow(live_tile, cmap='Oranges')
-                        plt.title('Live Tile ' + str(plt_pic))
-                        plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
-                        plt.axis('off')
-
-                        # plt.subplot(2, 3, 3)
-                        # plt.imshow(self.masks[well], cmap='gray')
-                        # plt.title('Mask')
-                        # plt.scatter(center[1], center[0], c='r', s=10, marker='x')
-                        # plt.axis('off')
-                        #
-                        # plt.subplot(2, 3, 6)
-                        # plt.imshow(self.masks[well][left:right, top:bottom], cmap='gray')
-                        # plt.title('Tile Mask')
-                        # plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
-                        # plt.axis('off')
-
-                if self.transform is not None:
-                    if self.debug: print("Transforming...")
-                    x = self.transform(x)
-                    y = self.transform(y)
-
-                if self.debug:
-                    plt.show()
-                    reply = input()
-                    if reply == "q":
-                        self.debug = False
-
-                # save potential centers to hard drive
+                potential_centers = np.argwhere(mask > 0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] < min_pos),
+                                              axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 0] > max_pos),
+                                              axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] < min_pos),
+                                              axis=0)
+                potential_centers = np.delete(potential_centers, np.argwhere(potential_centers[:, 1] > max_pos),
+                                              axis=0)
                 np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
 
-                if self.debug: print(f"Skipped tiles: {skipped_tiles}")
+            for picture in range(self.picture_batch_size):
+                valid_tile = False
+                while valid_tile == False:
+                    center_idx = np.random.randint(0, len(potential_centers))
+                    center = potential_centers[center_idx]
 
-                return x, y
+                    left = center[0] - round(self.tile_size / 2)
+                    right = center[0] + round(self.tile_size / 2)
+                    top = center[1] - round(self.tile_size / 2)
+                    bottom = center[1] + round(self.tile_size / 2)
 
-            except Exception as e:
-                print(f"Error in well {well} and depth {depth}")
-                print(f"With index {idx}")
-                raise e
+                    try:
+
+                        if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
+                            skipped_tiles += 1
+                            potential_centers = np.delete(potential_centers, center_idx, axis=0)
+                        else:
+                            valid_tile = True
+                    except IndexError as e:
+                        print(f"Index error: {well}, {depth}")
+                        print(f"Depth: {depth}")
+                        print(self.masks[well])
+                        print(center)
+                        print(left, right, top, bottom)
+
+                        plt.imshow(mask)
+                        plt.scatter(center[1], center[0], c='r', s=10, marker='x')
+                        # draw bounding box
+                        plt.plot([top, top], [right, left], 'b', linewidth=0.5)
+                        plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
+                        plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
+                        plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
+                        plt.savefig(f"error_{idx}.png")
+
+                        raise e
+
+                horizontal_flip = np.random.rand() > 0.5
+                vertical_flip = np.random.rand() > 0.5
+                rotation = np.random.randint(0, 4)
+
+                for i, bf_img in enumerate(bf_images):
+                    bf_tile = torch.tensor(bf_img[left:right, top:bottom])
+                    if horizontal_flip:
+                        bf_tile = torch.flip(bf_tile, [1])
+                    if vertical_flip:
+                        bf_tile = torch.flip(bf_tile, [0])
+                    if rotation > 0:
+                        bf_tile = torch.rot90(bf_tile, rotation, [0, 1])
+
+                    try:
+                        x[picture, i] = bf_tile
+                    except RuntimeError as e:
+                        print(f"Index error: {well}, {depth}")
+                        print(f"Depth: {depth}")
+                        print(f"Picture: {picture}")
+                        print(f"Image: {i}")
+                        print(f"Shape: {x.shape}")
+                        print(f"Tile shape: {bf_tile.shape}")
+                        print(f"Left: {left}, Right: {right}, Top: {top}, Bottom: {bottom}")
+
+                        plt.imshow(mask)
+                        plt.scatter(center[1], center[0], c='r', s=10, marker='x')
+                        # draw bounding box
+                        plt.plot([top, top], [right, left], 'b', linewidth=0.5)
+                        plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
+                        plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
+                        plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
+                        plt.savefig(f"error_{idx}.png")
+                        raise e
+
+                dead_tile = torch.tensor(dead_img[left:right, top:bottom])
+                live_tile = torch.tensor(live_img[left:right, top:bottom])
+
+                if horizontal_flip:
+                    dead_tile = torch.flip(dead_tile, [1])
+                    live_tile = torch.flip(live_tile, [1])
+                if vertical_flip:
+                    dead_tile = torch.flip(dead_tile, [0])
+                    live_tile = torch.flip(live_tile, [0])
+                if rotation > 0:
+                    dead_tile = torch.rot90(dead_tile, rotation, [0, 1])
+                    live_tile = torch.rot90(live_tile, rotation, [0, 1])
+
+                y[picture, 0] = dead_tile
+                y[picture, 1] = live_tile
+
+                if self.debug and plt_pic < 4:
+                    import matplotlib as mpl
+                    mpl.rcParams['figure.dpi'] = 300
+                    mpl.rcParams['font.size'] = 6
+
+                    plt.subplot(2, 1, 1)
+                    if plt_pic == 0:
+                        plt.imshow(bf_img, cmap='gray', vmin=0, vmax=255)
+                        plt.title('Brightfield')
+                        plt.axis('off')
+                    # Draw bounding box
+                    plt.plot([top, top], [right, left], 'b', linewidth=0.5)
+                    plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
+                    plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
+                    plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
+                    plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=0.5)
+
+                    plt.subplot(4, 2, 5)
+
+                    if plt_pic == 0:
+                        plt.imshow(mask, cmap='gray')
+                        plt.title('Mask')
+                        plt.axis('off')
+                    plt.plot([top, top], [right, left], 'b', linewidth=0.5)
+                    plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
+                    plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
+                    plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
+                    plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=0.5)
+
+                    plt_pic += 1
+
+                    row = 0 if plt_pic < 3 else 1
+                    col = plt_pic % 2 + 1
+
+                    plt.subplot(8, 4, row * 4 + col + 2 + 16)
+                    bf_tile = x[picture, 2]
+                    plt.imshow(bf_tile, cmap='gray', vmin=0, vmax=255)
+                    plt.title('Brightfield Tile ' + str(plt_pic))
+                    plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
+                    plt.axis('off')
+
+                    plt.subplot(8, 4, 8 + row * 4 + col + 16)
+                    plt.imshow(dead_tile, cmap='Greens', vmin=0, vmax=255)
+                    plt.title('Dead Tile ' + str(plt_pic))
+                    plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
+                    plt.axis('off')
+
+                    plt.subplot(8, 4, 10 + row * 4 + col + 16)
+                    plt.imshow(live_tile, cmap='Oranges', vmin=0, vmax=255)
+                    plt.title('Live Tile ' + str(plt_pic))
+                    plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
+                    plt.axis('off')
+
+                    # plt.subplot(2, 3, 3)
+                    # plt.imshow(self.masks[well], cmap='gray')
+                    # plt.title('Mask')
+                    # plt.scatter(center[1], center[0], c='r', s=10, marker='x')
+                    # plt.axis('off')
+                    #
+                    # plt.subplot(2, 3, 6)
+                    # plt.imshow(self.masks[well][left:right, top:bottom], cmap='gray')
+                    # plt.title('Tile Mask')
+                    # plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
+                    # plt.axis('off')
+
+            if self.transform is not None:
+                if self.debug: print("Transforming...")
+                x = self.transform(x)
+                y = self.transform(y)
+
+            if self.debug:
+                plt.show()
+                reply = input()
+                if reply == "q":
+                    self.debug = False
+
+            # save potential centers to hard drive
+            np.save(os.path.join(self.root, measurement, "potential_centers", well + ".npy"), potential_centers)
+
+            if self.debug: print(f"Skipped tiles: {skipped_tiles}")
+
+            return x, y
+
+        except Exception as e:
+            print(f"Error in well {well} and depth {depth}")
+            print(f"With index {idx}")
+            raise e
 
 
 def custom_collate_fn(batch):

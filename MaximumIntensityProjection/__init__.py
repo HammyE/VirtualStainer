@@ -19,17 +19,70 @@ def equalize(sample_img, param):
     :param param: tuple, equalization parameters
     :return: np.array, equalized image
     '''
+
     min_brightness, max_brightness = param
     sample_img = (sample_img - min_brightness) * (255.0 / (max_brightness - min_brightness))
+
+    # Clip the values to the range [0, 255]
+    sample_img = np.clip(sample_img, 0, 255).astype(np.uint8)
+
     return sample_img
 
 
-def get_equalization_params(img_set):
-    '''
+def get_equalization_params(img_set, quantiles=None):
+    """
     A method to get the equalization parameters for a plate.
     :return:
-    '''
-    ## TODO : Implement with quantiles
+    """
+
+    if quantiles is not None:
+        brightness_count = {}
+        for i in range(256):
+            brightness_count[i] = 0
+
+        for image in img_set:
+            image = cv2.imread(image)
+            for i in range(256):
+                brightness_count[i] += np.sum(image == i)
+
+        total_pixels = sum(brightness_count.values())
+        min_brightness = 0
+        max_brightness = 255
+        min_count = 0
+        max_count = total_pixels
+
+        hist_min = 0
+        hit_max = 255
+
+        for i in range(256):
+            min_count += brightness_count[i]
+            if min_count > total_pixels * quantiles[0]:
+                min_brightness = i
+                break
+            else:
+                hist_min = i
+
+        for i in range(255, -1, -1):
+            max_count -= brightness_count[i]
+            if max_count < total_pixels * quantiles[1]:
+                max_brightness = i
+                break
+            if brightness_count[i] == 0:
+                hist_max = i
+
+        if min_brightness == max_brightness:
+            max_brightness += 1
+
+        ## For debugging show histogram and limits
+        keys = list(range(hist_min, hist_max + 1))
+        values = [brightness_count[i] for i in keys]
+        plt.bar(keys, values)
+        plt.axvline(min_brightness, color='r')
+        plt.axvline(max_brightness, color='r')
+        plt.show()
+
+        return min_brightness, max_brightness
+
 
     min_brightness = float('inf')
     max_brightness = float('-inf')
