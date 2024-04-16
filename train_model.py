@@ -187,6 +187,9 @@ def train_model(training_params):
     # Remove device from training_params
     training_params.pop('DEVICE', None)
 
+    for key, value in training_params.items():
+        print(f"{key}: {type(value)}")
+
     progress_writer.add_hparams(training_params,{'null': 0}, run_name=run_name, global_step=0)
 
     # load model
