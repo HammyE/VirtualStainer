@@ -167,8 +167,9 @@ def train_model(training_params):
     process = multiprocessing.current_process().name
 
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
+    run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs/{time_stamp}_{process}"
+    log_dir = f"runs_2/{run_name}"
     # if model_dir is not None:
     #     log_dir = f"runs/{model_dir}"
 
@@ -182,6 +183,8 @@ def train_model(training_params):
     progress_writer.add_text('Parameters',
                              f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
                              0)
+
+    progress_writer.add_hparams(training_params, {}, run_name=run_name, global_step=0)
 
     # load model
     try:
@@ -280,8 +283,8 @@ def train_model(training_params):
             g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true_labels) + \
                      L1_LAMBDA * torch.nn.L1Loss()(outputs, true_fluorescent) + \
                      L2_LAMBDA * torch.nn.MSELoss()(outputs, true_fluorescent) + \
-                     0.5 * l1_loss_fn(outputs, true_fluorescent) + \
-                     0.5 * weighted_l2(outputs, true_fluorescent)
+                     0.1 * l1_loss_fn(outputs, true_fluorescent) + \
+                     0.1 * weighted_l2(outputs, true_fluorescent)
 
             generator.zero_grad()
 

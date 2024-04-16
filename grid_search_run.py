@@ -86,6 +86,8 @@ if __name__ == '__main__':
     learning_rate = [0.001, 0.01, 0.1]
     l1_lambda = [0.01, 0.1, 1]
     l2_lambda = [0.01, 0.1, 1]
+    D_LR = [0.001, 0.01, 0.1]
+    G_LR = [0.001, 0.01, 0.1]
 
     parameter_sets = []
     dataset = HarmonyDataset(
@@ -101,22 +103,24 @@ if __name__ == '__main__':
     for lr in learning_rate:
         for l1 in l1_lambda:
             for l2 in l2_lambda:
-                parameter_sets.append({
-                    'Process': 0,
-                    'LEARNING_RATE': lr,
-                    'DEPTH_PADDING': DEPTH_PADDING,
-                    'L1_LAMBDA': l1,
-                    'L2_LAMBDA': l2,
-                    'loader': False,
-                    'EPOCHS': EPOCHS,
-                    'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
-                    'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
-                    'SAVE_MODEL': SAVE_MODEL,
-                    'dataset': dataset,
-                    'TILE_SIZE': TILE_SIZE,
-                    'BATCH_SIZE': BATCH_SIZE,
-                })
-                process += 1
+                for g_lr in G_LR:
+                    for d_lr in D_LR:
+                        parameter_sets.append({
+                            'Process': process,
+                            'LEARNING_RATE': lr,
+                            'DEPTH_PADDING': DEPTH_PADDING,
+                            'L1_LAMBDA': l1,
+                            'L2_LAMBDA': l2,
+                            'loader': False,
+                            'EPOCHS': EPOCHS,
+                            'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
+                            'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
+                            'SAVE_MODEL': SAVE_MODEL,
+                            'dataset': dataset,
+                            'TILE_SIZE': TILE_SIZE,
+                            'BATCH_SIZE': BATCH_SIZE,
+                        })
+                        process += 1
 
     # Pop the first four parameter sets as they are already trained
     for i in range(4):
