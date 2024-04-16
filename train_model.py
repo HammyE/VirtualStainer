@@ -196,38 +196,35 @@ def train_model(training_params):
 
     # Extract test images
     iter_loader = iter(loader)
-    while True:
-        bf_channels, true_fluorescent = next(iter_loader)
-        test_bf_channels = bf_channels.to(DEVICE)
-        test_true_fluorescent = true_fluorescent.to(DEVICE)
-        indeces = np.arange(0, 4) * PIC_BATCH_SIZE
-        dead_sample = test_true_fluorescent[indeces, 0]
-        live_sample = test_true_fluorescent[indeces, 1]
-        bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
+    bf_channels, true_fluorescent = next(iter_loader)
+    test_bf_channels = bf_channels.to(DEVICE)
+    test_true_fluorescent = true_fluorescent.to(DEVICE)
+    indeces = np.arange(0, 4) * PIC_BATCH_SIZE
+    dead_sample = test_true_fluorescent[indeces, 0]
+    live_sample = test_true_fluorescent[indeces, 1]
+    bf_sample = test_bf_channels[indeces, DEPTH_PADDING]
 
-        dead_sample = dead_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-        dead_sample = torch.cat((dead_sample * 0.1, dead_sample * 0.8, dead_sample * 0), 1)
+    dead_sample = dead_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+    dead_sample = torch.cat((dead_sample * 0.1, dead_sample * 0.8, dead_sample * 0), 1)
 
-        live_sample = live_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-        live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
+    live_sample = live_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+    live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
 
-        bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-        #bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
+    bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
+    #bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
 
-        print(bf_sample.shape)
+    print(bf_sample.shape)
 
-        dead_real_grid = torchvision.utils.make_grid(dead_sample)
-        live_real_grid = torchvision.utils.make_grid(live_sample)
-        bf_real_grid = torchvision.utils.make_grid(bf_sample)
+    dead_real_grid = torchvision.utils.make_grid(dead_sample)
+    live_real_grid = torchvision.utils.make_grid(live_sample)
+    bf_real_grid = torchvision.utils.make_grid(bf_sample)
 
-        print(dead_real_grid.shape)
-        print(bf_real_grid.shape)
+    print(dead_real_grid.shape)
+    print(bf_real_grid.shape)
 
-        test_writer.add_image('brightfield', bf_real_grid, 0)
-        test_writer.add_image('live_fluorescent', live_real_grid, 0)
-        test_writer.add_image('dead_fluorescent', dead_real_grid, 0)
-        if input("Good enough?") == "y":
-            break
+    test_writer.add_image('brightfield', bf_real_grid, 0)
+    test_writer.add_image('live_fluorescent', live_real_grid, 0)
+    test_writer.add_image('dead_fluorescent', dead_real_grid, 0)
 
     logging_steps = 0
     for epoch in range(EPOCHS):
