@@ -186,6 +186,8 @@ def train_model(training_params):
 
     # Remove device from training_params
     training_params.pop('DEVICE', None)
+    training_params.pop('loader', None)
+    training_params.pop('dataset', None)
 
     for key, value in training_params.items():
         print(f"{key}: {type(value)}")
