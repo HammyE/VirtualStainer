@@ -113,7 +113,7 @@ class HarmonyDataset(Dataset):
                 diff = depth_padding - min_depth
                 min_depth = depth_padding
                 max_depth += diff
-            if max_depth + depth_padding > len(self.bf_stacks[well]):
+            if max_depth + depth_padding >= len(self.bf_stacks[well]):
                 diff = max_depth - len(self.bf_stacks[well]) + depth_padding + 1
                 max_depth = len(self.bf_stacks[well]) - depth_padding - 1
                 min_depth -= diff
