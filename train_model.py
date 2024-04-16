@@ -184,6 +184,9 @@ def train_model(training_params):
                              f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
                              0)
 
+    # Remove device from training_params
+    training_params.pop('DEVICE', None)
+
     progress_writer.add_hparams(training_params,{'null': 0}, run_name=run_name, global_step=0)
 
     # load model
