@@ -170,7 +170,7 @@ def train_model(training_params):
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
     run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_2/{run_name}"
+    log_dir = f"runs_3/{run_name}"
     # if model_dir is not None:
     #     log_dir = f"runs/{model_dir}"
 
