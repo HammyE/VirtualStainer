@@ -88,6 +88,8 @@ class HarmonyDataset(Dataset):
             if self.debug: print(f"Generating samples for measurement {measurement}...")
             self.generate_samples(plate_wells, depth_padding, max_pos, measurement, min_pos)
 
+            break
+
     def generate_samples(self, plate_wells, depth_padding, max_pos, measurement, min_pos):
         for well in plate_wells:
             self.find_depth_and_mask(measurement, well)
@@ -656,6 +658,48 @@ class HarmonyDataset(Dataset):
             print(f"Error in well {well} and depth {depth}")
             print(f"With index {idx}")
             raise e
+
+    def get_well_sample(self):
+        well = np.random.choice(self.wells)
+        measurement = well.split("f")[0][:-6]
+
+        x = None
+        active_tiles = None
+        n_tiles = 1
+
+        full_live = []
+        full_dead = []
+        full_bf = []
+
+        for depth_idx, depth in enumerate(self.depths[well]):
+
+
+            full_bf.append(cv2.imread(self.bf_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
+            full_dead.append(cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
+            full_live.append(cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
+
+
+            x_i = torch.zeros((n_tiles, 5, self.tile_size, self.tile_size))
+            for sub_depth_idx, sub_depth in enumerate(range(depth - self.depth_padding, depth + self.depth_padding + 1)):
+                bf_img = cv2.imread(self.bf_stacks[well][sub_depth], cv2.IMREAD_GRAYSCALE)
+                bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
+
+                tiles, _, _, active_tiles = self.tile_transform(bf_img, active_tiles)
+
+                if n_tiles == 1:
+                    print("n_tiles == 1")
+                    print(f"Tiles: {len(tiles)}")
+                    n_tiles = len(tiles)
+                    x = torch.zeros((n_tiles * self.depth_range, 5, self.tile_size, self.tile_size))
+                    x_i = torch.zeros((n_tiles, 5, self.tile_size, self.tile_size))
+
+                for tile_idx, tile in enumerate(tiles):
+                    x_i[tile_idx, sub_depth_idx] = torch.tensor(tile)
+
+            x[depth_idx * n_tiles:(depth_idx + 1) * n_tiles] = x_i
+
+        return active_tiles, x, n_tiles, (full_bf, full_dead, full_live)
+
 
 
 def custom_collate_fn(batch):

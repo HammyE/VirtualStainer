@@ -83,11 +83,11 @@ if __name__ == '__main__':
     print("Data loader loaded.")
 
 
-    learning_rate = [0.001, 0.01, 0.1]
-    l1_lambda = [0.01, 0.1, 1]
-    l2_lambda = [0.01, 0.1, 1]
-    D_LR = [0.001, 0.01, 0.1]
-    G_LR = [0.001, 0.01, 0.1]
+    learning_rate = [0.001, 0.01]
+    l1_lambda = [0.01]
+    l2_lambda = [0.1, 1]
+    D_LR = [0.001, 0.005, 0.01]
+    G_LR = [0.001, 0.01]
 
     parameter_sets = []
     dataset = HarmonyDataset(

@@ -55,7 +55,13 @@ class TileTransform:
         :return: tuple, transformed images
         '''
         "Running TileTransform..."
-        bf_img, dead_img, live_img = img_set
+
+        if type(img_set) == tuple:
+            bf_img, dead_img, live_img = img_set
+        else:
+            bf_img = img_set
+            dead_img = None
+            live_img = None
 
         if active_tiles is None:
             bf_tiles, active_tiles = self.__tile_image(bf_img)

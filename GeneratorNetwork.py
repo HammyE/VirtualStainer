@@ -1,6 +1,12 @@
+import io
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from matplotlib import pyplot as plt
+
+from MaximumIntensityProjection import MaximumIntensityProjection
 
 
 class DoubleConv3D(nn.Module):
@@ -182,7 +188,7 @@ class GeneratorNetwork(nn.Module):
             print("Output shape: ", x.shape)
             print("Output memory usage: ", x.element_size() * x.nelement() / 1024 / 1024, "MB")
 
-        return x
+        return torch.sigmoid(x)
 
 
 # Initialize the UNet3D with 5 input channels and 2 output channels
@@ -220,3 +226,172 @@ if __name__ == '__main__':
     # Add the model graph
     writer.add_graph(test_generator, dummy_input)
     writer.close()
+
+def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False):
+    active_tiles, x_full, n_tiles, real_fluorescent = dataset.get_well_sample()
+    print("Time to infer")
+    # create 1080 x 1080 black image
+    flourescent_image = np.zeros((3, 1080, 1080))
+    bf_image = np.ones((1080, 1080))
+    flourescent_list = []
+    bf_list = []
+    adjustment_matrix = np.zeros((1, 1080, 1080))
+    filter_matrix = np.ones((1, TILE_SIZE, TILE_SIZE))
+    adjustment_done = False
+    tile_filters = {}
+    adjustment_idx = 0
+    for i in range(0, 1080, TILE_SIZE - OVERLAP):
+        for j in range(0, 1080, TILE_SIZE - OVERLAP):
+            tile = flourescent_image[:, i:i + TILE_SIZE, j:j + TILE_SIZE]
+            okay = tile.shape[1] == TILE_SIZE and tile.shape[2] == TILE_SIZE
+
+            if okay:
+                if adjustment_idx in active_tiles:
+                    adjustment_matrix[0, i:i + TILE_SIZE, j:j + TILE_SIZE] += filter_matrix[0]
+                adjustment_idx += 1
+    adjustment_idx = 0
+    for i in range(0, 1080, TILE_SIZE - OVERLAP):
+        for j in range(0, 1080, TILE_SIZE - OVERLAP):
+            tile = flourescent_image[:, i:i + TILE_SIZE, j:j + TILE_SIZE]
+            okay = tile.shape[1] == TILE_SIZE and tile.shape[2] == TILE_SIZE
+
+            if okay:
+                if adjustment_idx in active_tiles:
+                    left_overlap = adjustment_matrix[0, i, j]
+                    right_overlap = adjustment_matrix[0, i, j + TILE_SIZE - 1]
+                    top_overlap = adjustment_matrix[0, i, j]
+                    bottom_overlap = adjustment_matrix[0, i + TILE_SIZE - 1, j]
+
+                    base_filter = np.ones((1, TILE_SIZE, TILE_SIZE))
+
+                    if left_overlap > 0:
+                        base_filter[:, :, 0:OVERLAP] = base_filter[:, :, 0:OVERLAP] * np.arange(0, 1, 1 / OVERLAP)
+                    if right_overlap > 0:
+                        base_filter[:, :, -OVERLAP:] = base_filter[:, :, -OVERLAP:] * np.arange(1, 0, -1 / OVERLAP)
+                    if top_overlap > 0:
+                        base_filter[:, 0:OVERLAP, :] = base_filter[:, 0:OVERLAP, :] * np.arange(0, 1, 1 / OVERLAP)[:,
+                                                                                      np.newaxis]
+                    if bottom_overlap > 0:
+                        base_filter[:, -OVERLAP:, :] = base_filter[:, -OVERLAP:, :] * np.arange(1, 0, -1 / OVERLAP)[:,
+                                                                                      np.newaxis]
+
+                    tile_filters[adjustment_idx] = base_filter
+
+                adjustment_idx += 1
+    for level in range(20):
+        flourescent_image = np.zeros((3, 1080, 1080))
+        bf_image = np.ones((1080, 1080))
+        tiles_used = 0
+        tile_idx = 0
+        x = x_full[n_tiles * level:n_tiles * (level + 1)].to(DEVICE)
+        with torch.no_grad():
+            y = generator(x)
+
+        print(f"Inferred level {level}")
+
+        for i in range(0, 1080, TILE_SIZE - OVERLAP):
+            for j in range(0, 1080, TILE_SIZE - OVERLAP):
+                tile = flourescent_image[:, i:i + TILE_SIZE, j:j + TILE_SIZE]
+
+                okay = tile.shape[1] == TILE_SIZE and tile.shape[2] == TILE_SIZE
+
+                if tile_idx in active_tiles and okay:
+                    tile = y[tiles_used].detach().cpu().numpy()
+                    bf_tile = x[tiles_used].detach().cpu().numpy()
+                    flourescent_image[0:2, i:i + TILE_SIZE, j:j + TILE_SIZE] += tile * tile_filters[tile_idx]
+                    bf_image[i:i + TILE_SIZE, j:j + TILE_SIZE] = bf_tile[2]
+                    tiles_used += 1
+
+                if okay:
+                    tile_idx += 1
+
+        # flourescent_image = flourescent_image / adjustment_matrix
+
+        print(f"Dead and live corner = {flourescent_image[:, 0, 0]}")
+
+        if level % 41 == 25:
+            print(f"Dead range: {flourescent_image[0].min()} - {flourescent_image[0].max()}")
+            print(f"Live range: {flourescent_image[1].min()} - {flourescent_image[1].max()}")
+
+            plt.title(f"Level {level}")
+
+            plt.subplot(1, 2, 1)
+
+            plt.imshow(flourescent_image.T, vmax=1, vmin=0)
+            plt.axis('off')
+
+            plt.subplot(1, 2, 2)
+
+            # Show the bf image
+            plt.imshow(bf_image.T, cmap='gray', vmax=1, vmin=0)
+            plt.axis('off')
+
+            plt.show()
+
+        flourescent_list.append(np.max(np.array([flourescent_image, np.zeros_like(flourescent_image)]), axis=0))
+        bf_list.append(bf_image)
+    # Readjust light intensity
+    dead_min = 0
+    dead_max = 3
+    live_min = 0
+    live_max = 7
+    bf_min = 0
+    bf_max = 50
+    bf_list_scaled, live_list, dead_list = [], [], []
+    for i in range(len(flourescent_list)):
+        bf_list_scaled.append(bf_list[i] * 255.0)
+        dead_list.append((flourescent_list[i][0] * 255.0 / (255.0 / (dead_max - dead_min))) + dead_min)
+        live_list.append((flourescent_list[i][1] * 255.0 / (255.0 / (live_max - live_min))) + live_min)
+        bf_list_scaled[i] = (bf_list_scaled[i] / (255.0 / (bf_max - bf_min))) + bf_min
+    mip_trans = MaximumIntensityProjection(equalization_method="linear")
+    bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list))
+    bf_real, dead_real, live_real = mip_trans(real_fluorescent)
+    dead_matrix = np.array(dead_list)
+    # dead = np.max(dead_matrix, axis=0)
+    live_matrix = np.array(live_list)
+    # live = np.max(live_matrix, axis=0)
+    plt.hist(dead.flatten(), bins=100, alpha=0.5, label='Dead')
+    plt.hist(live.flatten(), bins=100, alpha=0.5, label='Live')
+    plt.hist(dead_matrix.flatten(), bins=100, alpha=0.5, label='Dead Matrix')
+    plt.hist(live_matrix.flatten(), bins=100, alpha=0.5, label='Live Matrix')
+    plt.legend()
+    plt.yscale('log')
+    plt.show()
+    # live = 255 - live
+    # dead = 255 - dead
+    print(live[0, 0])
+    print(dead[0, 0])
+    plt.figure(figsize=(15, 10), dpi=300)
+    plt.subplot(2, 3, 1)
+    plt.imshow(bf, cmap='gray', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+    plt.subplot(2, 3, 2)
+    plt.imshow(dead, cmap='Greens', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+    plt.subplot(2, 3, 3)
+    plt.imshow(live, cmap='Oranges', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+    plt.subplot(2, 3, 4)
+    plt.imshow(bf_real, cmap='gray', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+    plt.subplot(2, 3, 5)
+    plt.imshow(dead_real, cmap='Greens', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+    plt.subplot(2, 3, 6)
+    plt.imshow(live_real, cmap='Oranges', vmin=0, vmax=255)
+    plt.colorbar()
+    plt.axis('off')
+
+    if display:
+        plt.show()
+    else:
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        plt.close()
+        return buf

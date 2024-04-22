@@ -14,7 +14,8 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 
 from DiscriminatorNetwork import DiscriminatorNetwork
-from GeneratorNetwork import GeneratorNetwork
+from GeneratorNetwork import GeneratorNetwork, generate_full_test
+from MaximumIntensityProjection import MaximumIntensityProjection
 from RangeTransform import RangeTransform
 from dataset import HarmonyDataset, custom_collate_fn
 
@@ -26,6 +27,7 @@ from train_model import train_model
 # Defining the main function
 
 data_dir = 'dataset'
+
 
 def display_images():
     # show data
@@ -81,11 +83,14 @@ def display_images():
     # Show the plot
     plt.show()
 
+
+
+
 if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     DEPTH_PADDING = 2
-    OVERLAP = TILE_SIZE // 2
+    OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
     EPOCHS = 20
@@ -138,8 +143,6 @@ if __name__ == '__main__':
 
     DEBUG = False
 
-
-
     print("Running main.py")
 
     # load data
@@ -156,7 +159,8 @@ if __name__ == '__main__':
         overlap=OVERLAP,
         transform=transform,
         depth_padding=DEPTH_PADDING,
-        picture_batch_size=PIC_BATCH_SIZE
+        picture_batch_size=PIC_BATCH_SIZE,
+        depth_range=20
     )
 
     print("Dataset loaded.")
@@ -173,22 +177,42 @@ if __name__ == '__main__':
     if DEBUG:
         display_images()
 
-    train_model(
-        {'LEARNING_RATE': LEARNING_RATE,
-         'TILE_SIZE': TILE_SIZE,
-         'DEPTH_PADDING': DEPTH_PADDING,
-         'MIN_ENCODER_DIM': MIN_ENCODER_DIM,
-         'EPOCHS': EPOCHS,
-         'loader': loader,
-         'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
-         'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
-         'SAVE_MODEL': SAVE_MODEL,
-         'L1_LAMBDA': L1_LAMBDA,
-         'L2_LAMBDA': L2_LAMBDA,
-         'DEVICE': DEVICE,
-         'G_LR': G_LR,
-         'D_LR': D_LR}
-    )
+    # train_model(
+    #     {'LEARNING_RATE': LEARNING_RATE,
+    #      'TILE_SIZE': TILE_SIZE,
+    #      'DEPTH_PADDING': DEPTH_PADDING,
+    #      'MIN_ENCODER_DIM': MIN_ENCODER_DIM,
+    #      'EPOCHS': EPOCHS,
+    #      'loader': loader,
+    #      'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
+    #      'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
+    #      'SAVE_MODEL': SAVE_MODEL,
+    #      'L1_LAMBDA': L1_LAMBDA,
+    #      'L2_LAMBDA': L2_LAMBDA,
+    #      'DEVICE': DEVICE,
+    #      'G_LR': G_LR,
+    #      'D_LR': D_LR}
+    # )
 
-    # extract materials
+    # load model
 
+    model_path = 'runs/20240417-000820_Process-5'
+    #model_path = "runs/20240417-145502_Process-5"
+
+    model_paths = """20240417-000820_Process-4
+20240417-000820_Process-5
+20240417-145502_Process-5
+20240418-055142_Process-3
+20240418-204935_Process-5
+20240419-114049_Process-3
+20240420-023359_Process-5""".split('\n')
+
+    for model_path in model_paths:
+
+        model_path = f'runs/{model_path}'
+
+        generator = GeneratorNetwork(out_channels=2, image_size=TILE_SIZE, depth_padding=DEPTH_PADDING,
+                                     min_encoding_dim=MIN_ENCODER_DIM).to(DEVICE)
+        generator.load_state_dict(torch.load(f'{model_path}/generator.pt', map_location=DEVICE))
+
+        generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available())

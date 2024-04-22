@@ -1,5 +1,6 @@
 import time
 
+import PIL
 import numpy as np
 import torch
 import torchvision
@@ -8,7 +9,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from DiscriminatorNetwork import DiscriminatorNetwork
-from GeneratorNetwork import GeneratorNetwork
+from GeneratorNetwork import GeneratorNetwork, generate_full_test
 from dataset import custom_collate_fn
 
 
@@ -357,6 +358,13 @@ def train_model(training_params):
                     fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
                     progress_writer.add_scalar('True Accuracy', true_accuracy, logging_steps)
                     progress_writer.add_scalar('Fake Accuracy', fake_accuracy, logging_steps)
+
+                    if logging_steps % 10 == 0:
+                        plot_buf = generate_full_test(dataset, TILE_SIZE, TILE_SIZE//4, DEVICE, generator)
+                        image = PIL.Image.open(plot_buf)
+                        image = torchvision.transforms.ToTensor()(image)
+                        progress_writer.add_image('Full Test', image, logging_steps)
+
 
                     logging_steps += 1
     # test model

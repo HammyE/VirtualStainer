@@ -104,7 +104,7 @@ class MaximumIntensityProjection(object):
         Constructor of the class.
         :param regularization: str, equalization method to be used (clahe, histogram, linear or None)
         '''
-        self.debug = True
+        self.debug = False
         self.equalization_method = equalization_method  # "clahe", "histogram", "linear"
 
     def __call__(self, img_set, slices=None):
@@ -127,7 +127,7 @@ class MaximumIntensityProjection(object):
             stop = None
 
         bf_channel = self.__one_channel_mip(bf_img_list, equalization=self.equalization_method, stop=stop, start=start,
-                                            rolling_ball=True)
+                                            rolling_ball=False)
         dead_channel = self.__one_channel_mip(dead_img_list, equalization=self.equalization_method, stop=stop,
                                               start=start)
         live_channel = self.__one_channel_mip(live_img_list, equalization=self.equalization_method, stop=stop,
