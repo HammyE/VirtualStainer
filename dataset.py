@@ -71,7 +71,7 @@ class HarmonyDataset(Dataset):
         # Load every measurement
         for index, measurement in enumerate(measurements):
 
-            if measurement.contains("DS_Store"):
+            if "DS_Store" in measurement:
                 continue
 
             # Load or create equalization params, and cache them
