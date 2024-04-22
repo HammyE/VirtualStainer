@@ -345,7 +345,7 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
 
     # live = 255 - live
     # dead = 255 - dead
-    plt.figure(figsize=(15, 10), dpi=150)
+    plt.figure(figsize=(15, 10), dpi=80)
     plt.subplot(2, 3, 1)
     plt.imshow(bf, cmap='gray', vmin=0, vmax=255)
     plt.colorbar()
