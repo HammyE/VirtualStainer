@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # Hyperparameters
     TILE_SIZE = 128
-    OVERLAP = TILE_SIZE // 2
+    OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
     EPOCHS = 18
