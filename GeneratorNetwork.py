@@ -287,8 +287,6 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
         with torch.no_grad():
             y = generator(x)
 
-        print(f"Inferred level {level}")
-
         for i in range(0, 1080, TILE_SIZE - OVERLAP):
             for j in range(0, 1080, TILE_SIZE - OVERLAP):
                 tile = flourescent_image[:, i:i + TILE_SIZE, j:j + TILE_SIZE]
@@ -306,8 +304,6 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
                     tile_idx += 1
 
         # flourescent_image = flourescent_image / adjustment_matrix
-
-        print(f"Dead and live corner = {flourescent_image[:, 0, 0]}")
 
         if level % 41 == 25:
             print(f"Dead range: {flourescent_image[0].min()} - {flourescent_image[0].max()}")
@@ -346,22 +342,10 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
     mip_trans = MaximumIntensityProjection(equalization_method="linear")
     bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list))
     bf_real, dead_real, live_real = mip_trans(real_fluorescent)
-    dead_matrix = np.array(dead_list)
-    # dead = np.max(dead_matrix, axis=0)
-    live_matrix = np.array(live_list)
-    # live = np.max(live_matrix, axis=0)
-    plt.hist(dead.flatten(), bins=100, alpha=0.5, label='Dead')
-    plt.hist(live.flatten(), bins=100, alpha=0.5, label='Live')
-    plt.hist(dead_matrix.flatten(), bins=100, alpha=0.5, label='Dead Matrix')
-    plt.hist(live_matrix.flatten(), bins=100, alpha=0.5, label='Live Matrix')
-    plt.legend()
-    plt.yscale('log')
-    plt.show()
+
     # live = 255 - live
     # dead = 255 - dead
-    print(live[0, 0])
-    print(dead[0, 0])
-    plt.figure(figsize=(15, 10), dpi=300)
+    plt.figure(figsize=(15, 10), dpi=150)
     plt.subplot(2, 3, 1)
     plt.imshow(bf, cmap='gray', vmin=0, vmax=255)
     plt.colorbar()
