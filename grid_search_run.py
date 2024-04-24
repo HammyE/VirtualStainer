@@ -43,7 +43,7 @@ if __name__ == '__main__':
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
-    EPOCHS = 18
+    EPOCHS = 1
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
@@ -83,11 +83,31 @@ if __name__ == '__main__':
     print("Data loader loaded.")
 
 
-    learning_rate = [0.001, 0.01]
-    l1_lambda = [0.01]
-    l2_lambda = [0.1, 1]
-    D_LR = [0.001, 0.005, 0.01]
-    G_LR = [0.001, 0.01]
+    learning_rate = [0] #[0.001, 0.01]
+    l1_lambda = [0] #[0.01]
+    l2_lambda = [0] #[0.1, 1]
+    D_LR = [0] #[0.001, 0.005, 0.01]
+    G_LR = [0] #[0.001, 0.01]
+    run_names = ["20240422-205546_Process-4",
+"20240423-165651_Process-3",
+"20240423-165649_Process-5",
+"20240423-165127_Process-4",
+"20240423-165122_Process-2",
+"20240423-115702_Process-5",
+"20240423-115653_Process-3",
+"20240423-115255_Process-4",
+"20240423-115245_Process-2",
+"20240423-065557_Process-5",
+"20240423-065549_Process-3",
+"20240423-065313_Process-4",
+"20240423-065303_Process-2",
+"20240423-015531_Process-5",
+"20240423-015528_Process-3",
+"20240423-015427_Process-4",
+"20240423-015425_Process-2",
+"20240422-205546_Process-5",
+"20240422-205546_Process-3",
+"20240422-205546_Process-2",]
 
     parameter_sets = []
     dataset = HarmonyDataset(
@@ -105,26 +125,24 @@ if __name__ == '__main__':
             for l2 in l2_lambda:
                 for g_lr in G_LR:
                     for d_lr in D_LR:
-                        parameter_sets.append({
-                            'Process': process,
-                            'LEARNING_RATE': lr,
-                            'DEPTH_PADDING': DEPTH_PADDING,
-                            'L1_LAMBDA': l1,
-                            'L2_LAMBDA': l2,
-                            'loader': False,
-                            'EPOCHS': EPOCHS,
-                            'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
-                            'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
-                            'SAVE_MODEL': SAVE_MODEL,
-                            'dataset': dataset,
-                            'TILE_SIZE': TILE_SIZE,
-                            'BATCH_SIZE': BATCH_SIZE,
-                        })
+                        for run_name in run_names:
+                            parameter_sets.append({
+                                'Process': process,
+                                'LEARNING_RATE': lr,
+                                'DEPTH_PADDING': DEPTH_PADDING,
+                                'L1_LAMBDA': l1,
+                                'L2_LAMBDA': l2,
+                                'loader': False,
+                                'EPOCHS': EPOCHS,
+                                'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
+                                'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
+                                'SAVE_MODEL': SAVE_MODEL,
+                                'dataset': dataset,
+                                'TILE_SIZE': TILE_SIZE,
+                                'BATCH_SIZE': BATCH_SIZE,
+                                "run_name": run_name,
+                            })
                         process += 1
-
-    # Pop the first four parameter sets as they are already trained
-    for i in range(4):
-        parameter_sets.pop(0)
 
     n_cuda = torch.cuda.device_count()
     n_workers = n_cuda * 2

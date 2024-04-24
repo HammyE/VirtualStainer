@@ -177,22 +177,23 @@ if __name__ == '__main__':
     if DEBUG:
         display_images()
 
-    # train_model(
-    #     {'LEARNING_RATE': LEARNING_RATE,
-    #      'TILE_SIZE': TILE_SIZE,
-    #      'DEPTH_PADDING': DEPTH_PADDING,
-    #      'MIN_ENCODER_DIM': MIN_ENCODER_DIM,
-    #      'EPOCHS': EPOCHS,
-    #      'loader': loader,
-    #      'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
-    #      'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
-    #      'SAVE_MODEL': SAVE_MODEL,
-    #      'L1_LAMBDA': L1_LAMBDA,
-    #      'L2_LAMBDA': L2_LAMBDA,
-    #      'DEVICE': DEVICE,
-    #      'G_LR': G_LR,
-    #      'D_LR': D_LR}
-    # )
+    train_model(
+        {'LEARNING_RATE': LEARNING_RATE,
+         'TILE_SIZE': TILE_SIZE,
+         'DEPTH_PADDING': DEPTH_PADDING,
+         'MIN_ENCODER_DIM': MIN_ENCODER_DIM,
+         'EPOCHS': EPOCHS,
+         'loader': loader,
+         'TRUE_BATCH_SIZE': TRUE_BATCH_SIZE,
+         'PIC_BATCH_SIZE': PIC_BATCH_SIZE,
+         'SAVE_MODEL': SAVE_MODEL,
+         'L1_LAMBDA': L1_LAMBDA,
+         'L2_LAMBDA': L2_LAMBDA,
+         'DEVICE': DEVICE,
+         'G_LR': G_LR,
+         'D_LR': D_LR,
+         'run_name': "20240417-000820_Process-5"}
+    )
 
     # load model
 

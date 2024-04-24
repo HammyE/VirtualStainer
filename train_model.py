@@ -1,3 +1,4 @@
+import os
 import time
 
 import PIL
@@ -50,81 +51,61 @@ class AsymmetricL2Loss(nn.Module):
 
 
 def train_model(training_params):
-    LEARNING_RATE = training_params.get('LEARNING_RATE', 0.001)
-    TILE_SIZE = training_params.get('TILE_SIZE', 64)
-    DEPTH_PADDING = training_params.get('DEPTH_PADDING', 2)
+
+    run_name = training_params.get('run_name', None)
+
+    import multiprocessing
+    process = multiprocessing.current_process().name
+
+    if run_name is None:
+        print("No run name provided")
+        time_stamp = time.strftime("%Y%m%d-%H%M%S")
+        run_name = f"{time_stamp}_{process}"
+
+    log_dir = f"runs/{run_name}"
+
+    EPOCHS = int(training_params.get('EPOCHS', 10))
+
+    try:
+        param_file = None
+        for file in os.listdir(f"{log_dir}/progress"):
+            if "events.out.tfevents" in file:
+                print(f"Loading previous parameters from {file}")
+                param_file = file
+                continue
+
+            else:
+                print(file)
+
+        with open(f"{log_dir}/progress/{param_file}", 'rb') as f:
+            for line in f.readlines():
+                line = str(line)
+                if "LEARNING_RATE" in line:
+                    key_value_pairs = line.split("\\x01")[3].split("J")[0]
+                    key_value_pairs = key_value_pairs.split(", ")
+                    for pair in key_value_pairs:
+                        key, value = pair.split(": ")
+                        print(f"{key}: {value}")
+                        training_params[key] = value
+                    continue
+
+    except FileNotFoundError:
+        print("Didn't find previous parameters")
+
+    LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
+    TILE_SIZE = int(training_params.get('TILE_SIZE', 128))
+    DEPTH_PADDING = int(training_params.get('DEPTH_PADDING', 2))
     MIN_ENCODER_DIM = 16
-    EPOCHS = training_params.get('EPOCHS', 10)
     loader = training_params.get('loader', None)
-    TRUE_BATCH_SIZE = training_params.get('TRUE_BATCH_SIZE', 32)
-    PIC_BATCH_SIZE = training_params.get('PIC_BATCH_SIZE', 4)
-    SAVE_MODEL = training_params.get('SAVE_MODEL', False)
-    L1_LAMBDA = training_params.get('L1_LAMBDA', 0.01)
-    L2_LAMBDA = training_params.get('L2_LAMBDA', 0.01)
+    TRUE_BATCH_SIZE = int(training_params.get('TRUE_BATCH_SIZE', 32))
+    PIC_BATCH_SIZE = int(training_params.get('PIC_BATCH_SIZE', 4))
+    SAVE_MODEL = bool(training_params.get('SAVE_MODEL', False))
+    L1_LAMBDA = float(training_params.get('L1_LAMBDA', 0.01))
+    L2_LAMBDA = float(training_params.get('L2_LAMBDA', 0.01))
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
     G_LR = training_params.get('G_LR', LEARNING_RATE)
     D_LR = training_params.get('D_LR', LEARNING_RATE)
-
-    try:
-        print(f"Training process {training_params['Process']}")
-    except KeyError:
-        pass
-
-#     good_runs_string = """20240405-100841_Process-2
-# 20240405-100841_Process-4
-# 20240405-175545_Process-2
-# 20240405-175545_Process-3
-# 20240405-175545_Process-4
-# 20240405-175545_Process-5
-# 20240406-002836_Process-3"""
-#
-#     training_param_string = """20240405-100841_Process-2
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.01, L2_LAMBDA: 0.01
-# 20240405-100841_Process-4
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.01, L2_LAMBDA: 0.1
-# 20240405-175545_Process-2
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.1
-# 20240405-175545_Process-3
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 1, L2_LAMBDA: 0.01
-# 20240405-175545_Process-4
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 1
-# 20240405-175545_Process-5
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 1, L2_LAMBDA: 0.1
-# 20240406-002836_Process-3
-# LEARNING_RATE: 0.001, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 9, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 1, L2_LAMBDA: 1
-# """
-#
-#     # Make dictionary of good run params
-#     training_param_string = """20240411-170345_MainProcess
-# LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01
-# 20240411-170348_MainProcess
-# LEARNING_RATE: 0.002, TILE_SIZE: 128, DEPTH_PADDING: 2, MIN_ENCODER_DIM: 16, EPOCHS: 20, TRUE_BATCH_SIZE: 24, PIC_BATCH_SIZE: 3, SAVE_MODEL: True, L1_LAMBDA: 0.1, L2_LAMBDA: 0.01"""
-#
-#
-#     good_runs = {}
-#     first = True
-#     val = ""
-#     for run in training_param_string.split("\n"):
-#         if first:
-#             val = run
-#             first = False
-#         else:
-#             first = True
-#             good_runs[run] = val
-#
-#     # Get the key for this run
-#     key = f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}"
-#
-#     model_dir = None
-#     try:
-#         model_dir = good_runs[key]
-#         print(f"Model found: {model_dir}")
-#         print(f"Using params {key}")
-#     except KeyError:
-#         print("Key not found")
-#         print(f"Using params {key}")
-#         return
 
     if loader == False:
         dataset = training_params.get('dataset', None)
@@ -163,16 +144,14 @@ def train_model(training_params):
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=G_LR)
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
-    # Add writers for tensorboard
-    import multiprocessing
-    process = multiprocessing.current_process().name
+    try:
+        generator.load_state_dict(torch.load(f"{log_dir}/generator.pt", map_location=DEVICE))
+        discriminator.load_state_dict(torch.load(f"{log_dir}/discriminator.pt", map_location=DEVICE))
+        print("Model loaded")
+    except FileNotFoundError:
+        print("Model not found")
 
-    time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    run_name = f"{time_stamp}_{process}"
-
-    log_dir = f"runs_3/{run_name}"
-    # if model_dir is not None:
-    #     log_dir = f"runs/{model_dir}"
+    input("Press enter to continue...")
 
     fake_writer = SummaryWriter(f"{log_dir}/fake")
     real_writer = SummaryWriter(f"{log_dir}/real")
@@ -181,27 +160,19 @@ def train_model(training_params):
     test_writer = SummaryWriter(f"{log_dir}/test")
 
     # Save parameters to tensorboard
-    progress_writer.add_text('Parameters',
-                             f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
-                             0)
+    #progress_writer.add_text('Parameters',
+    #                         f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
+    #                         0)
 
     # Remove device from training_params
     training_params.pop('DEVICE', None)
     training_params.pop('loader', None)
     training_params.pop('dataset', None)
 
-    for key, value in training_params.items():
-        print(f"{key}: {type(value)}")
-
-    progress_writer.add_hparams(training_params,{'null': 0}, run_name=run_name, global_step=0)
+    #progress_writer.add_hparams(training_params,{'null': 0}, run_name=run_name, global_step=0)
 
     # load model
-    try:
-        generator.load_state_dict(torch.load(f"{log_dir}/generator.pt"))
-        discriminator.load_state_dict(torch.load(f"{log_dir}/discriminator.pt"))
-        print("Model loaded")
-    except FileNotFoundError:
-        print("Model not found")
+
 
     # Extract test images
     iter_loader = iter(loader)
@@ -254,18 +225,6 @@ def train_model(training_params):
             true_fluorescent = true_fluorescent.to(DEVICE)
 
             print(f"Batch {batch_idx}")
-            if epoch == 0 and batch_idx == 0:
-                print(bf_channels.shape)
-                # print(true_fluorescent.shape)
-                # # calculate the memory usage of a batch
-                # print("Memory usage of input: ", bf_channels.element_size() * bf_channels.nelement() / 1024 / 1024,
-                #       "MB")
-                # print("Memory usage of output: ",
-                #       true_fluorescent.element_size() * true_fluorescent.nelement() / 1024 / 1024, "MB")
-                # print("Memory usage of both: ",
-                #       bf_channels.element_size() * bf_channels.nelement() / 1024 / 1024 + true_fluorescent.element_size() * true_fluorescent.nelement() / 1024 / 1024,
-                #       "MB")
-
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
 
@@ -286,11 +245,12 @@ def train_model(training_params):
 
             disc_fake_outputs = discriminator(bf_channels, outputs)
 
+            l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
+            l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
+
             g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true_labels) + \
-                     L1_LAMBDA * torch.nn.L1Loss()(outputs, true_fluorescent) + \
-                     L2_LAMBDA * torch.nn.MSELoss()(outputs, true_fluorescent) + \
-                     0.1 * l1_loss_fn(outputs, true_fluorescent) + \
-                     0.1 * weighted_l2(outputs, true_fluorescent)
+                     L1_LAMBDA * l1_loss_real + \
+                     L2_LAMBDA * l2_loss_real
 
             generator.zero_grad()
 
@@ -348,6 +308,8 @@ def train_model(training_params):
                     # log losses
                     progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
                     progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
+                    progress_writer.add_scalar('Generator L1 Loss', l1_loss_real.item(), logging_steps)
+                    progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
 
                     # accuracy
                     disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
@@ -356,14 +318,16 @@ def train_model(training_params):
                     disc_fake_outputs = np.round(disc_fake_outputs)
                     true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
                     fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
-                    progress_writer.add_scalar('True Accuracy', true_accuracy, logging_steps)
-                    progress_writer.add_scalar('Fake Accuracy', fake_accuracy, logging_steps)
+                    progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
+                    progress_writer.add_scalar('Fake Accuracy (% of fake classified as fake)', fake_accuracy, logging_steps)
 
                     if logging_steps % 10 == 0:
+                        infer_start_time = time.time()
                         plot_buf = generate_full_test(dataset, TILE_SIZE, TILE_SIZE//4, DEVICE, generator)
                         image = PIL.Image.open(plot_buf)
                         image = torchvision.transforms.ToTensor()(image)
                         progress_writer.add_image('Full Test', image, logging_steps)
+                        print(f"Time taken for inference: {round(time.time() - infer_start_time, 2)} seconds")
 
 
                     logging_steps += 1
