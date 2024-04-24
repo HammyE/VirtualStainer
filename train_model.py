@@ -167,7 +167,7 @@ def train_model(training_params):
     training_params.pop('loader', None)
     training_params.pop('dataset', None)
 
-    #progress_writer.add_hparams(training_params,{'null': 0}, run_name=run_name, global_step=0)
+    progress_writer.add_hparams(training_params,{'Generator L1 Loss': 0, 'Generator L2 Loss': 0}, run_name=run_name, global_step=0)
 
     # load model
 
@@ -189,16 +189,11 @@ def train_model(training_params):
     live_sample = torch.cat((live_sample * 0.9, live_sample * 0.8, live_sample * 0), 1)
 
     bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
-    #bf_sample = torch.cat((bf_sample, bf_sample, bf_sample), 1)
 
-    print(bf_sample.shape)
 
     dead_real_grid = torchvision.utils.make_grid(dead_sample)
     live_real_grid = torchvision.utils.make_grid(live_sample)
     bf_real_grid = torchvision.utils.make_grid(bf_sample)
-
-    print(dead_real_grid.shape)
-    print(bf_real_grid.shape)
 
     test_writer.add_image('brightfield', bf_real_grid, 0)
     test_writer.add_image('live_fluorescent', live_real_grid, 0)
