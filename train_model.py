@@ -62,7 +62,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs/{run_name}"
+    log_dir = f"runs_3/{run_name}"
 
     EPOCHS = int(training_params.get('EPOCHS', 10))
 
