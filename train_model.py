@@ -151,8 +151,6 @@ def train_model(training_params):
     except FileNotFoundError:
         print("Model not found")
 
-    input("Press enter to continue...")
-
     fake_writer = SummaryWriter(f"{log_dir}/fake")
     real_writer = SummaryWriter(f"{log_dir}/real")
     bf_writer = SummaryWriter(f"{log_dir}/brightfield")
