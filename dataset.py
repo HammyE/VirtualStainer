@@ -92,7 +92,6 @@ class HarmonyDataset(Dataset):
             if self.debug: print(f"Generating samples for measurement {measurement}...")
             self.generate_samples(plate_wells, depth_padding, max_pos, measurement, min_pos)
 
-            break
 
     def generate_samples(self, plate_wells, depth_padding, max_pos, measurement, min_pos):
         for well in plate_wells:
