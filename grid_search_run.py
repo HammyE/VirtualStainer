@@ -42,7 +42,7 @@ if __name__ == '__main__':
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
-    BATCH_SIZE = 8
+    BATCH_SIZE = 16
     EPOCHS = 10
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -145,7 +145,7 @@ if __name__ == '__main__':
                         process += 1
 
     n_cuda = torch.cuda.device_count()
-    n_workers = n_cuda * 2
+    n_workers = n_cuda * 1
     n_parameter_sets = len(parameter_sets)
 
         # Setup multiprocessing

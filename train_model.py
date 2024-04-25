@@ -65,6 +65,7 @@ def train_model(training_params):
     log_dir = f"runs_3/{run_name}"
 
     EPOCHS = int(training_params.get('EPOCHS', 10))
+    L1_LAMBDA = float(training_params.get('L1_LAMBDA', 0.01))
 
     try:
         param_file = None
@@ -100,7 +101,6 @@ def train_model(training_params):
     TRUE_BATCH_SIZE = int(training_params.get('TRUE_BATCH_SIZE', 32))
     PIC_BATCH_SIZE = int(training_params.get('PIC_BATCH_SIZE', 4))
     SAVE_MODEL = bool(training_params.get('SAVE_MODEL', False))
-    L1_LAMBDA = float(training_params.get('L1_LAMBDA', 0.01))
     L2_LAMBDA = float(training_params.get('L2_LAMBDA', 0.01))
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
 
@@ -167,7 +167,7 @@ def train_model(training_params):
     training_params.pop('loader', None)
     training_params.pop('dataset', None)
 
-    progress_writer.add_hparams(training_params,{'Generator L1 Loss': 0, 'Generator L2 Loss': 0}, run_name=run_name, global_step=0)
+    progress_writer.add_hparams(training_params,{'Generator L1 Loss': float("inf"), 'Generator L2 Loss': float("inf")}, run_name=run_name, global_step=0)
 
     # load model
 
@@ -199,7 +199,7 @@ def train_model(training_params):
     test_writer.add_image('live_fluorescent', live_real_grid, 0)
     test_writer.add_image('dead_fluorescent', dead_real_grid, 0)
 
-    logging_steps = 0
+    logging_steps = 320
     for epoch in range(EPOCHS):
         logging_time = 0
         print(f"Epoch {epoch}")
