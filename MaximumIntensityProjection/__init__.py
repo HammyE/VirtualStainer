@@ -49,6 +49,8 @@ def get_equalization_params(img_set, quantiles=None):
             for i in range(256):
                 brightness_count[i] += np.sum(image == i)
 
+            print_idx += 1
+
         total_pixels = sum(brightness_count.values())
         min_brightness = 0
         max_brightness = 255
@@ -91,7 +93,12 @@ def get_equalization_params(img_set, quantiles=None):
     min_brightness = float('inf')
     max_brightness = float('-inf')
 
+
+    print(f"Calculating brightness count for {len(img_set)}")
+    print_idx = 0
     for image in img_set:
+        if print_idx % 100 == 0:
+            print(f"Processing image {print_idx}")
         image = cv2.imread(image)
         min_brightness = min(min_brightness, np.min(image))
         max_brightness = max(max_brightness, np.max(image))
