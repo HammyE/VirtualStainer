@@ -1,11 +1,14 @@
 import os
+import time
+
 import torch
 import cv2
 import numpy as np
 # from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 from torch.utils.data import Dataset
-from MaximumIntensityProjection import equalize, get_equalization_params, get_blur, gaussian
+from MaximumIntensityProjection import equalize, get_equalization_params, get_blur, gaussian, \
+    get_equalization_params_parallel
 from TileTransform import TileTransform
 
 import matplotlib.pyplot as plt
@@ -390,12 +393,24 @@ class HarmonyDataset(Dataset):
                     all_images_live.append(img.replace("ch3", "ch2"))
 
             # load images
+            start_time = time.time()
             print(f"equalizing brightfield images for {plate}")
-            self.equalization_params_brightfield[plate] = get_equalization_params(all_images_brightfield)
+            mult_params = get_equalization_params(all_images_brightfield)
             print(f"equalizing dead images for {plate}")
-            self.equalization_params_dead[plate] = get_equalization_params(all_images_dead, [0.01, 0.999])
+            dead_params = get_equalization_params_parallel(all_images_dead, [0.01, 0.999])
             print(f"equalizing live images for {plate}")
-            self.equalization_params_live[plate] = get_equalization_params(all_images_live, [0.01, 0.999])
+            live_params = get_equalization_params_parallel(all_images_live, [0.01, 0.999])
+            print(f"Time taken mult: {time.time() - start_time}")
+
+            #start_time = time.time()
+            self.equalization_params_brightfield[plate] = mult_params #get_equalization_params(all_images_brightfield)
+            self.equalization_params_dead[plate] = dead_params # get_equalization_params(all_images_dead, [0.01, 0.999])
+
+            self.equalization_params_live[plate] =  live_params # get_equalization_params(all_images_live, [0.01, 0.999])
+            #print(f"Time taken single: {time.time() - start_time}")
+
+            #print(f"Values mult = {mult_params}, dead = {dead_params}, live = {live_params}")
+            #print(f"Values single = {self.equalization_params_brightfield[plate]}, dead = {self.equalization_params_dead[plate]}, live = {self.equalization_params_live[plate]}")
 
             if self.debug: print("Saving equalization params...")
             bf_params = np.array(self.equalization_params_brightfield[plate])

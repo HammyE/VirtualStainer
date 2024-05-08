@@ -1,3 +1,5 @@
+import multiprocessing
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -80,12 +82,12 @@ def get_equalization_params(img_set, quantiles=None):
             max_brightness += 1
 
         ## For debugging show histogram and limits
-        keys = list(range(hist_min, hist_max + 1))
-        values = [brightness_count[i] for i in keys]
-        plt.bar(keys, values)
-        plt.axvline(min_brightness, color='r')
-        plt.axvline(max_brightness, color='r')
-        plt.show()
+        # keys = list(range(hist_min, hist_max + 1))
+        # values = [brightness_count[i] for i in keys]
+        # plt.bar(keys, values)
+        # plt.axvline(min_brightness, color='r')
+        # plt.axvline(max_brightness, color='r')
+        # plt.show()
 
         return min_brightness, max_brightness
 
@@ -327,3 +329,72 @@ class MaximumIntensityProjection(object):
 
         return corrected_image_with_uniform_background
 
+
+def process_images(image_chunk, brightness_count, lock):
+    local_count = {i: 0 for i in range(256)}
+    print_idx = 0
+    for image_path in image_chunk:
+        if print_idx % 50 == 0:
+            print(f"Processing image {print_idx}")
+        print_idx += 1
+        image = cv2.imread(image_path)
+        for i in range(256):
+            local_count[i] += np.sum(image == i)
+    with lock:
+        for i in range(256):
+            brightness_count[i] += local_count[i]
+
+
+def get_equalization_params_parallel(img_set, quantiles=None):
+    num_workers = multiprocessing.cpu_count() * 2  # Number of available CPU cores
+    chunk_size = len(img_set) // num_workers
+    print(num_workers)
+
+    # Set up a manager to handle shared data
+    manager = multiprocessing.Manager()
+    brightness_count = manager.dict({i: 0 for i in range(256)})
+    lock = manager.Lock()
+
+    # Create chunks of the image set
+    image_chunks = [img_set[i:i + chunk_size] for i in range(0, len(img_set), chunk_size)]
+
+    # Setup multiprocessing pool
+    pool = multiprocessing.Pool(processes=num_workers)
+    for chunk in image_chunks:
+        pool.apply_async(process_images, args=(chunk, brightness_count, lock))
+    pool.close()
+    pool.join()
+
+    total_pixels = sum(brightness_count.values())
+    min_brightness = 0
+    max_brightness = 255
+    min_count = 0
+    max_count = total_pixels
+
+    # Calculate the histogram limits
+
+    for i in range(256):
+        min_count += brightness_count[i]
+        if quantiles is not None:
+            if min_count > total_pixels * quantiles[0]:
+                min_brightness = i
+                break
+
+
+    for i in range(255, -1, -1):
+        max_count -= brightness_count[i]
+        if quantiles is not None:
+            if max_count < total_pixels * quantiles[1]:
+                max_brightness = i
+                break
+
+    if min_brightness == max_brightness:
+        max_brightness += 1
+
+    # Optionally, visualize the histogram and cutoffs
+    # plt.bar(range(256), [brightness_count.get(i, 0) for i in range(256)])
+    # plt.axvline(min_brightness, color='r')
+    # plt.axvline(max_brightness, color='r')
+    # plt.show()
+
+    return min_brightness, max_brightness
