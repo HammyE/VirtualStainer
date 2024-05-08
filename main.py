@@ -160,7 +160,9 @@ if __name__ == '__main__':
         transform=transform,
         depth_padding=DEPTH_PADDING,
         picture_batch_size=PIC_BATCH_SIZE,
-        depth_range=20
+        depth_range=20,
+        every_nth=2,
+        start_nth=0,
     )
 
     print("Dataset loaded.")

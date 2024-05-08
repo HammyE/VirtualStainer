@@ -31,7 +31,7 @@ class ImageSample():
 
 class HarmonyDataset(Dataset):
     def __init__(self, root, equalization=None, tile_size=256, overlap=32, depth_padding=1, depth_range=20,
-                 picture_batch_size=8, transform=None):
+                 picture_batch_size=8, transform=None, cycle=False, every_nth=1, start_nth=0, debug=False):
         '''
         This is dataset class for harmony dataset, that parses the file structure and returns the brightfield images
         and the corresponding stained images.
@@ -72,10 +72,17 @@ class HarmonyDataset(Dataset):
         measurements = os.listdir(root)
 
         # Load every measurement
+        cycle_idx = 0
         for index, measurement in enumerate(measurements):
 
             if "DS_Store" in measurement:
                 continue
+
+            if cycle:
+                if cycle_idx % every_nth == every_nth:
+                    cycle_idx += 1
+                    continue
+                cycle_idx += 1
 
             # Load or create equalization params, and cache them
             self.load_equalization(measurement)
