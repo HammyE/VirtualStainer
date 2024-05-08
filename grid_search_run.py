@@ -43,7 +43,7 @@ if __name__ == '__main__':
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 16
-    EPOCHS = 10
+    EPOCHS = 5
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
@@ -83,11 +83,11 @@ if __name__ == '__main__':
     print("Data loader loaded.")
 
 
-    learning_rate = [0] #[0.001, 0.01]
-    l1_lambda = [0.5] #[0.01]
-    l2_lambda = [0] #[0.1, 1]
-    D_LR = [0] #[0.001, 0.005, 0.01]
-    G_LR = [0] #[0.001, 0.01]
+    learning_rate = [0.001, 0.01]
+    l1_lambda = [0.01]
+    l2_lambda = [0.1, 1]
+    D_LR = [0.001, 0.005, 0.01]
+    G_LR = [0.001, 0.01]
     run_names = [#"20240422-205546_Process-4",
 "20240423-165651_Process-3",
 "20240423-165649_Process-5",
@@ -109,6 +109,8 @@ if __name__ == '__main__':
 "20240422-205546_Process-3",
 "20240422-205546_Process-2",]
 
+    run_names = [None]
+
     parameter_sets = []
     dataset = HarmonyDataset(
         root=data_dir,
@@ -117,7 +119,9 @@ if __name__ == '__main__':
         overlap=OVERLAP,
         transform=transform,
         depth_padding=DEPTH_PADDING,
-        picture_batch_size=PIC_BATCH_SIZE
+        picture_batch_size=PIC_BATCH_SIZE,
+        every_nth=2,
+        start_nth=0,
     )
     process = 0
     for lr in learning_rate:
