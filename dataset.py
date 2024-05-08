@@ -531,6 +531,13 @@ class HarmonyDataset(Dataset):
                             potential_centers = np.delete(potential_centers, center_idx, axis=0)
                         else:
                             valid_tile = True
+
+                        if valid_tile:
+                            if left < 0 or right >= self.image_size or top < 0 or bottom >= self.image_size:
+                                valid_tile = False
+                                skipped_tiles += 1
+                                potential_centers = np.delete(potential_centers, center_idx, axis=0)
+
                     except IndexError as e:
                         print(f"Index error: {well}, {depth}")
                         print(f"Depth: {depth}")
