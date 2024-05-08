@@ -102,6 +102,7 @@ def get_equalization_params(img_set, quantiles=None):
         image = cv2.imread(image)
         min_brightness = min(min_brightness, np.min(image))
         max_brightness = max(max_brightness, np.max(image))
+        print_idx += 1
 
 
     return min_brightness, max_brightness
