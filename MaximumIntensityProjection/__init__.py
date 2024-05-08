@@ -40,7 +40,11 @@ def get_equalization_params(img_set, quantiles=None):
         for i in range(256):
             brightness_count[i] = 0
 
+        print(f"Calculating brightness count for {len(img_set)}")
+        print_idx = 0
         for image in img_set:
+            if print_idx % 100 == 0:
+                print(f"Processing image {print_idx}")
             image = cv2.imread(image)
             for i in range(256):
                 brightness_count[i] += np.sum(image == i)

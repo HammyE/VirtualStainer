@@ -390,8 +390,11 @@ class HarmonyDataset(Dataset):
                     all_images_live.append(img.replace("ch3", "ch2"))
 
             # load images
+            print(f"equalizing brightfield images for {plate}")
             self.equalization_params_brightfield[plate] = get_equalization_params(all_images_brightfield)
+            print(f"equalizing dead images for {plate}")
             self.equalization_params_dead[plate] = get_equalization_params(all_images_dead, [0.01, 0.999])
+            print(f"equalizing live images for {plate}")
             self.equalization_params_live[plate] = get_equalization_params(all_images_live, [0.01, 0.999])
 
             if self.debug: print("Saving equalization params...")
