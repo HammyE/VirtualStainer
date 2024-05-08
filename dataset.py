@@ -525,18 +525,19 @@ class HarmonyDataset(Dataset):
                     bottom = center[1] + round(self.tile_size / 2)
 
                     try:
-
-                        if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
+                        if left < 0 or right >= self.image_size or top < 0 or bottom >= self.image_size:
                             skipped_tiles += 1
                             potential_centers = np.delete(potential_centers, center_idx, axis=0)
                         else:
                             valid_tile = True
-
                         if valid_tile:
-                            if left < 0 or right >= self.image_size or top < 0 or bottom >= self.image_size:
-                                valid_tile = False
+                            if np.quantile(mask[left:right, top:bottom], 0.3) == 0:
                                 skipped_tiles += 1
                                 potential_centers = np.delete(potential_centers, center_idx, axis=0)
+                                valid_tile = False
+
+
+
 
                     except IndexError as e:
                         print(f"Index error: {well}, {depth}")
