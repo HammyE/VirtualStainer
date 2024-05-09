@@ -64,8 +64,16 @@ def train_model(training_params):
 
     log_dir = f"runs_3/{run_name}"
 
+    LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
     L1_LAMBDA = float(training_params.get('L1_LAMBDA', 0.01))
+    TILE_SIZE = int(training_params.get('TILE_SIZE', 128))
+    TRUE_BATCH_SIZE = int(training_params.get('TRUE_BATCH_SIZE', 32))
+    L2_LAMBDA = float(training_params.get('L2_LAMBDA', 0.01))
+    PIC_BATCH_SIZE = int(training_params.get('PIC_BATCH_SIZE', 4))
+    G_LR = training_params.get('G_LR', LEARNING_RATE)
+    D_LR = training_params.get('D_LR', LEARNING_RATE)
+
 
     try:
         param_file = None
@@ -93,19 +101,11 @@ def train_model(training_params):
     except FileNotFoundError:
         print("Didn't find previous parameters")
 
-    LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
-    TILE_SIZE = int(training_params.get('TILE_SIZE', 128))
     DEPTH_PADDING = int(training_params.get('DEPTH_PADDING', 2))
     MIN_ENCODER_DIM = 16
     loader = training_params.get('loader', None)
-    TRUE_BATCH_SIZE = int(training_params.get('TRUE_BATCH_SIZE', 32))
-    PIC_BATCH_SIZE = int(training_params.get('PIC_BATCH_SIZE', 4))
     SAVE_MODEL = bool(training_params.get('SAVE_MODEL', False))
-    L2_LAMBDA = float(training_params.get('L2_LAMBDA', 0.01))
     DEVICE = training_params.get('DEVICE', torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
-
-    G_LR = training_params.get('G_LR', LEARNING_RATE)
-    D_LR = training_params.get('D_LR', LEARNING_RATE)
 
     if loader == False:
         dataset = training_params.get('dataset', None)
