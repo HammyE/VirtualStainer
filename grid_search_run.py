@@ -41,8 +41,8 @@ if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 3
-    BATCH_SIZE = 16
+    PIC_BATCH_SIZE = 2
+    BATCH_SIZE = 9
     EPOCHS = 5
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -83,10 +83,10 @@ if __name__ == '__main__':
     print("Data loader loaded.")
 
 
-    learning_rate = [0.001, 0.01]
-    l1_lambda = [0.01]
-    l2_lambda = [0.1, 1]
-    D_LR = [0.001, 0.005, 0.01]
+    learning_rate = [0.01]
+    l1_lambda = [0.1, 0.5]
+    l2_lambda = [0.1]
+    D_LR = [0.01]#[0.001, 0.005, 0.01]
     G_LR = [0.001, 0.01]
     run_names = [#"20240422-205546_Process-4",
 "20240423-165651_Process-3",
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     parameter_sets = parameter_sets[4:]
 
     n_cuda = torch.cuda.device_count()
-    n_workers = n_cuda * 1
+    n_workers = n_cuda * 2
     n_parameter_sets = len(parameter_sets)
 
         # Setup multiprocessing
