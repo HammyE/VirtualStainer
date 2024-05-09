@@ -1,6 +1,8 @@
 import subprocess
+import time
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from torch import multiprocessing
 from torchvision import transforms
@@ -27,6 +29,10 @@ def worker_func(shared_param_sets, lock, gpu_id):
 
         # Now, train the model with these parameters on the assigned GPU
         params['DEVICE'] = torch.device(f'cuda:{gpu_id}')
+        # wait a random amount of time to avoid all processes starting at the same time
+        n_seconds = np.random.randint(0, 240)
+        print(f"Process {params['Process']} waiting for {n_seconds} seconds.")
+        time.sleep(1)
         train_model(params)  # Your training function
 
 
