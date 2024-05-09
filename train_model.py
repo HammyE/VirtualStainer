@@ -78,7 +78,7 @@ def train_model(training_params):
     try:
         param_file = None
         for file in os.listdir(f"{log_dir}/progress"):
-            if "events.out.tfevents" in file:
+            if "events.out.tfevents" in file and param_file is None:
                 print(f"Loading previous parameters from {file}")
                 param_file = file
                 continue
