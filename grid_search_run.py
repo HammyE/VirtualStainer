@@ -148,6 +148,10 @@ if __name__ == '__main__':
                             })
                         process += 1
 
+    # Remove the first 4 parameter sets
+    print(f"Parameter sets: {len(parameter_sets)}")
+    parameter_sets = parameter_sets[4:]
+
     n_cuda = torch.cuda.device_count()
     n_workers = n_cuda * 1
     n_parameter_sets = len(parameter_sets)
@@ -158,6 +162,8 @@ if __name__ == '__main__':
 
     shared_param_sets = manager.list(parameter_sets)
     lock = manager.Lock()
+
+
 
     processes = []
     for i in range(n_workers):
