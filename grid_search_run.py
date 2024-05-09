@@ -32,7 +32,7 @@ def worker_func(shared_param_sets, lock, gpu_id):
         # wait a random amount of time to avoid all processes starting at the same time
         n_seconds = np.random.randint(0, 240)
         print(f"Process {params['Process']} waiting for {n_seconds} seconds.")
-        time.sleep(1)
+        time.sleep(n_seconds)
         train_model(params)  # Your training function
 
 
