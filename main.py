@@ -4,6 +4,7 @@ import subprocess
 import time
 import sys
 
+import PIL
 import numpy as np
 import torch
 import torchvision
@@ -153,8 +154,8 @@ if __name__ == '__main__':
 
     disallowed_datasets = [
         '2307130102__2023-07-23T08_50_42-Measurement 11',
-        '2307130202__2023-07-23T10_32_16-Measurement 11',
-        '2307130302__2023-07-23T12_13_49-Measurement 11'
+        #'2307130202__2023-07-23T10_32_16-Measurement 11',
+        #'2307130302__2023-07-23T12_13_49-Measurement 11'
     ]
 
     dataset = HarmonyDataset(
@@ -213,7 +214,15 @@ if __name__ == '__main__':
 20240423-115255_Process-4
 20240423-165649_Process-5""".split('\n')
 
+    os.mkdir('results')
+
+
     for model_path in model_paths:
+        os.mkdir(f'results/{model_path}')
+        os.mkdir(f'results/{model_path}/images')
+
+        img_path = f'results/{model_path}/images'
+        result_path =  f'results/{model_path}/data.csv'
         model_path = f'runs_3/{model_path}'
 
         generator = GeneratorNetwork(out_channels=2, image_size=TILE_SIZE, depth_padding=DEPTH_PADDING,
@@ -227,6 +236,8 @@ if __name__ == '__main__':
         max_i = 0
         ssim = structural_similarity_index_measure
 
+
+
         with torch.no_grad():
             n_batches = len(loader) // TRUE_BATCH_SIZE
             start = time.time()
@@ -234,7 +245,7 @@ if __name__ == '__main__':
 
                 if batch_idx % 10 == 0:
                     print(f"Batch {batch_idx}/{len(loader)}")
-                    print(f"Percents: {batch_idx / len(loader) * 100}%")
+                    print(f"Percents: {round(batch_idx / len(loader) * 100)}%")
                     elapsed = time.time() - start
                     hours, remainder = divmod(elapsed, 3600)
                     minutes, seconds = divmod(remainder, 60)
@@ -243,7 +254,9 @@ if __name__ == '__main__':
                     hours, remainder = divmod(left, 3600)
                     minutes, seconds = divmod(remainder, 60)
                     print(f"Time left: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
-
+                    buffer = generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator,display=False)
+                    image = PIL.Image.open(buffer)
+                    image.save(f'{img_path}/image_{batch_idx}.png')
                 bf_channels = bf_channels.to(DEVICE)
                 true_fluorescent = true_fluorescent.to(DEVICE)
                 generated_fluorescent = generator(bf_channels)
@@ -251,16 +264,35 @@ if __name__ == '__main__':
                 # print(f"True fluorescent shape: {true_fluorescent.shape}")
                 # print(f"Brightfield shape: {bf_channels.shape}")
 
+                print(f"Generated fluorescent max: {torch.max(generated_fluorescent)}")
+
                 full_mse += torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
                 full_mae += torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
                 max_i = torch.max(torch.tensor([max_i, torch.max(generated_fluorescent)]))
                 full_ssim = ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0, 1.0)) * bf_channels.shape[0]
 
-                # print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
-                # print(f"MAE: {torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent)}")
+                print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
+                print(f"MAE: {torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent)}")
+                print(f"Size: {bf_channels.shape[0]} / {len(dataset)}")
                 # print(f"SSIM: {ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0,1.0))}")
 
-            print(f"Full MSE: {full_mse / len(loader)}")
-            print(f"Full MAE: {full_mae / len(loader)}")
-            print(f"Full SSIM: {full_ssim / len(loader)}")
-            print(f"PSNR: {20* torch.log10(max_i) - 10 * torch.log10(torch.tensor(full_mse / len(loader)))}")
+
+            mse = full_mse / len(dataset)
+            mae = full_mae / len(dataset)
+            ssim = full_ssim / len(dataset)
+            PSNR = 20 * torch.log10(max_i) - 10 * torch.log10(torch.tensor(mse))
+
+            print(f"Full MSE: {mse}")
+            print(f"Full MAE: {mae}")
+            print(f"Full SSIM: {ssim}")
+            print(f"PSNR: {PSNR}")
+
+            # Save the data
+            with open(result_path, 'w') as f:
+                f.write(f"Measure,Value\n")
+                f.write(f"MSE,{mse}\n")
+                f.write(f"MAE,{mae}\n")
+                f.write(f"SSIM,{ssim}\n")
+                f.write(f"PSNR,{PSNR}\n")
+                f.write(f"Model path,{model_path}\n")
+                f.write(f"n images,{len(dataset)}\n")
