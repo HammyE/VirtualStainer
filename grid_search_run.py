@@ -48,7 +48,7 @@ if __name__ == '__main__':
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 2
-    BATCH_SIZE = 12
+    BATCH_SIZE = 8
     EPOCHS = 5
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

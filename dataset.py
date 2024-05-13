@@ -31,7 +31,7 @@ class ImageSample():
 
 class HarmonyDataset(Dataset):
     def __init__(self, root, equalization=None, tile_size=256, overlap=32, depth_padding=1, depth_range=20,
-                 picture_batch_size=8, transform=None, cycle=False, every_nth=1, start_nth=0, debug=False):
+                 picture_batch_size=8, transform=None, cycle=False, every_nth=1, start_nth=0, debug=False, disallowed_datasets=None):
         '''
         This is dataset class for harmony dataset, that parses the file structure and returns the brightfield images
         and the corresponding stained images.
@@ -77,6 +77,11 @@ class HarmonyDataset(Dataset):
 
             if "DS_Store" in measurement:
                 continue
+
+            if disallowed_datasets is not None:
+                if measurement in disallowed_datasets:
+                    print(f"Skipping {measurement}")
+                    continue
 
             if cycle:
                 if cycle_idx % every_nth == every_nth:
