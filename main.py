@@ -91,7 +91,7 @@ if __name__ == '__main__':
     DEPTH_PADDING = 2
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 1
-    BATCH_SIZE = 128
+    BATCH_SIZE = 256
     EPOCHS = 0
     LEARNING_RATE = 0.002
     MIN_ENCODER_DIM = 16
@@ -232,7 +232,7 @@ if __name__ == '__main__':
             start = time.time()
             for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
 
-                if batch_idx % 100 == 0:
+                if batch_idx % 10 == 0:
                     print(f"Batch {batch_idx}/{len(loader)}")
                     print(f"Percents: {batch_idx / len(loader) * 100}%")
                     elapsed = time.time() - start
