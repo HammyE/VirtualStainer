@@ -90,8 +90,8 @@ if __name__ == '__main__':
     TILE_SIZE = 128
     DEPTH_PADDING = 2
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 3
-    BATCH_SIZE = 8
+    PIC_BATCH_SIZE = 1
+    BATCH_SIZE = 128
     EPOCHS = 0
     LEARNING_RATE = 0.002
     MIN_ENCODER_DIM = 16
@@ -238,10 +238,10 @@ if __name__ == '__main__':
                     elapsed = time.time() - start
                     hours, remainder = divmod(elapsed, 3600)
                     minutes, seconds = divmod(remainder, 60)
+                    print(f"Time elapsed: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
                     left = (time.time() - start) / (batch_idx + 1) * (len(loader) - batch_idx)
                     hours, remainder = divmod(left, 3600)
                     minutes, seconds = divmod(remainder, 60)
-                    print(f"Time elapsed: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
                     print(f"Time left: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
 
                 bf_channels = bf_channels.to(DEVICE)
