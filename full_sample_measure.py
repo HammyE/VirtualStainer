@@ -214,17 +214,17 @@ if __name__ == '__main__':
 20240423-115255_Process-4
 20240423-165649_Process-5""".split('\n')
 
-    if not os.path.exists('results'):
-        os.mkdir('results')
+    if not os.path.exists('results_mip'):
+        os.mkdir('results_mip')
 
 
     for model_path in model_paths:
-        if not os.path.exists(f'results/{model_path}'):
-            os.mkdir(f'results/{model_path}')
-            os.mkdir(f'results/{model_path}/images')
+        if not os.path.exists(f'results_mip/{model_path}'):
+            os.mkdir(f'results_mip/{model_path}')
+            os.mkdir(f'results_mip/{model_path}/images')
 
-        img_path = f'results/{model_path}/images'
-        result_path = f'results/{model_path}/data.csv'
+        img_path = f'results_mip/{model_path}/images'
+        result_path = f'results_mip/{model_path}/data.csv'
         model_path = f'runs_3/{model_path}'
 
         generator = GeneratorNetwork(out_channels=2, image_size=TILE_SIZE, depth_padding=DEPTH_PADDING,
@@ -232,105 +232,98 @@ if __name__ == '__main__':
         generator.load_state_dict(torch.load(f'{model_path}/generator.pt', map_location=DEVICE))
 
         # Show the network architecture
-        print(
-            f"Generator network architecture:\n{generator}\nNumber of parameters: {sum(p.numel() for p in generator.parameters())}")
+        #print(
+        #    f"Generator network architecture:\n{generator}\nNumber of parameters: {sum(p.numel() for p in generator.parameters())}")
 
 
         #generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available())
 
-        full_mse = 0
-        full_mae = 0
-        max_i = 0
+        full_mse_dead = 0
+        full_mse_live = 0
+        full_mae_dead = 0
+        full_mae_live = 0
+        max_intensity_dead = 0
+        max_intensity_live = 0
         ssim = structural_similarity_index_measure
+
+        full_ssim_dead = 0
+        full_ssim_live = 0
+
+
 
 
 
         with (torch.no_grad()):
             n_batches = len(loader) // TRUE_BATCH_SIZE
+
+            wells = dataset.wells
+            n_wells = len(wells)
+
             start = time.time()
-            for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
+            for well_idx, well in enumerate(wells):
 
 
 
-                if batch_idx % 10 == 0:
-                    print(f"Batch {batch_idx}/{len(loader)}")
-                    print(f"Percents: {round(batch_idx / len(loader) * 100)}%")
+                if well_idx % 10 == 0:
+                    print(f"Batch {well_idx}/{n_wells}")
+                    print(f"Percents: {round(well_idx / n_wells * 100)}%")
                     elapsed = time.time() - start
                     hours, remainder = divmod(elapsed, 3600)
                     minutes, seconds = divmod(remainder, 60)
                     print(f"Time elapsed: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
-                    left = (time.time() - start) / (batch_idx + 1) * (len(loader) - batch_idx)
+                    left = (time.time() - start) / (well_idx + 1) * (n_wells - well_idx)
                     hours, remainder = divmod(left, 3600)
                     minutes, seconds = divmod(remainder, 60)
                     print(f"Time left: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
-                    buffer = generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator,display=False)
-                    image = PIL.Image.open(buffer)
-                    image.save(f'{img_path}/image_{batch_idx}.png')
-                bf_channels = bf_channels.to(DEVICE)
-                true_fluorescent = true_fluorescent.to(DEVICE)
-                generated_fluorescent = generator(bf_channels)
 
 
-                if batch_idx == 0:
-                    for img_idx in range(4):
-                        input_1 = bf_channels[img_idx]
-                        output_1 = generated_fluorescent[img_idx]
-                        true_f = true_fluorescent[img_idx]
-
-                        #for i in range(5):
-                        #    plt.imshow(input_1[i].cpu().numpy(), cmap='gray')
-                        #    plt.show()
-
-                        plt.subplot(4, 4, 4*img_idx + 1)
-                        plt.imshow(output_1[0].cpu().numpy(), cmap='Greens')
-                        plt.axis('off')
-                        plt.subplot(4, 4, 4 * img_idx + 2)
-                        plt.imshow(true_f[0].cpu().numpy(), cmap='Greens')
-                        plt.axis('off')
-                        plt.subplot(4, 4, 4 * img_idx + 3)
-                        #plt.show()
-                        plt.imshow(output_1[1].cpu().numpy(), cmap='Oranges')
-                        plt.axis('off')
-                        plt.subplot(4, 4, 4 * img_idx + 4)
-                        plt.imshow(true_f[1].cpu().numpy(), cmap='Oranges')
-                        plt.axis('off')
+                bf, dead, live, bf_real, dead_real, live_real = generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=well, return_images=True)
 
 
-                    plt.show()
+
 
                 # print(f"Generated fluorescent shape: {generated_fluorescent.shape}")
                 # print(f"True fluorescent shape: {true_fluorescent.shape}")
                 # print(f"Brightfield shape: {bf_channels.shape}")
 
-                print(f"Generated fluorescent max: {torch.max(generated_fluorescent)}")
-
-                full_mse += torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
-                full_mae += torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
-                max_i = torch.max(torch.tensor([max_i, torch.max(generated_fluorescent)]))
-                full_ssim = ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0, 1.0)) * bf_channels.shape[0]
-
-                print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
-                print(f"MAE: {torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent)}")
-                print(f"Size: {bf_channels.shape[0]} / {len(dataset)}")
-                # print(f"SSIM: {ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0,1.0))}")
+                dead = torch.tensor(dead).reshape(1, 1, 1080, 1080)
+                live = torch.tensor(live).reshape(1, 1, 1080, 1080)
+                dead_real = torch.tensor(dead_real).reshape(1, 1, 1080, 1080)
+                live_real = torch.tensor(live_real).reshape(1, 1, 1080, 1080)
 
 
-            mse = full_mse / len(dataset)
-            mae = full_mae / len(dataset)
-            ssim = full_ssim / len(dataset)
-            PSNR = 20 * torch.log10(max_i) - 10 * torch.log10(torch.tensor(mse))
+                full_mse_dead += torch.nn.functional.mse_loss(dead/255.0, dead_real/255.0)
+                full_mse_live += torch.nn.functional.mse_loss(live/255.0, live_real/255.0)
 
-            print(f"Full MSE: {mse}")
-            print(f"Full MAE: {mae}")
-            print(f"Full SSIM: {ssim}")
-            print(f"PSNR: {PSNR}")
+                full_mae_dead += torch.nn.functional.l1_loss(dead/255.0, dead_real/255.0)
+                full_mae_live += torch.nn.functional.l1_loss(live/255.0, live_real/255.0)
+
+                max_intensity_dead = torch.max(torch.tensor([max_intensity_dead, torch.max(dead/255.0)]))
+                max_intensity_live = torch.max(torch.tensor([max_intensity_live, torch.max(live/255.0)]))
+
+                full_ssim_dead += ssim(preds=dead/255.0, target=dead_real/255.0, data_range=(0.0, 1.0))
+                full_ssim_live += ssim(preds=live/255.0, target=live_real/255.0, data_range=(0.0, 1.0))
+
+
+
+            full_mse_dead = full_mse_dead / n_wells
+            full_mse_live = full_mse_live / n_wells
+            full_mae_dead = full_mae_dead / n_wells
+            full_mae_live = full_mae_live / n_wells
+
+            full_ssim_dead = full_ssim_dead / n_wells
+            full_ssim_live = full_ssim_live / n_wells
+
+            PSNR_dead = 20 * torch.log10(max_intensity_dead) - 10 * torch.log10(torch.tensor(full_mse_dead))
+            PSNR_live = 20 * torch.log10(max_intensity_live) - 10 * torch.log10(torch.tensor(full_mse_live))
+
 
             # Save the data
             with open(result_path, 'w') as f:
-                f.write(f"Measure,Value\n")
-                f.write(f"MSE,{mse}\n")
-                f.write(f"MAE,{mae}\n")
-                f.write(f"SSIM,{ssim}\n")
-                f.write(f"PSNR,{PSNR}\n")
+                f.write(f"Measure,Dead,Live\n")
+                f.write(f"MSE,{full_mse_dead},{full_mse_live}\n")
+                f.write(f"MAE,{full_mae_dead},{full_mae_live}\n")
+                f.write(f"SSIM,{full_ssim_dead},{full_ssim_live}\n")
+                f.write(f"PSNR,{PSNR_dead},{PSNR_live}\n")
                 f.write(f"Model path,{model_path}\n")
-                f.write(f"n images,{len(dataset)}\n")
+                f.write(f"n wells,{n_wells}\n")

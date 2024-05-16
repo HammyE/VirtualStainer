@@ -82,12 +82,15 @@ def get_equalization_params(img_set, quantiles=None):
             max_brightness += 1
 
         ## For debugging show histogram and limits
-        # keys = list(range(hist_min, hist_max + 1))
-        # values = [brightness_count[i] for i in keys]
-        # plt.bar(keys, values)
-        # plt.axvline(min_brightness, color='r')
-        # plt.axvline(max_brightness, color='r')
-        # plt.show()
+        keys = list(range(hist_min, hist_max + 1))
+        values = [brightness_count[i] for i in keys]
+        plt.bar(keys, values)
+        # Set log scale for better visualization
+        #plt.yscale('log')
+        plt.axvline(min_brightness + 0.5, color='r')
+        plt.axvline(max_brightness - 0.5, color='r')
+        plt.xticks(range(0, 30, 2))
+        plt.show()
 
         return min_brightness, max_brightness
 
@@ -392,9 +395,13 @@ def get_equalization_params_parallel(img_set, quantiles=None):
         max_brightness += 1
 
     # Optionally, visualize the histogram and cutoffs
-    # plt.bar(range(256), [brightness_count.get(i, 0) for i in range(256)])
-    # plt.axvline(min_brightness, color='r')
-    # plt.axvline(max_brightness, color='r')
-    # plt.show()
+    plt.bar(range(256), [brightness_count.get(i, 0) for i in range(256)])
+    plt.axvline(min_brightness, color='r')
+    plt.axvline(max_brightness, color='r')
+    plt.yscale('log')
+    plt.xticks(range(0, 70, 5))
+    # set window to span 0-70
+    plt.xlim(0, 70)
+    plt.show()
 
     return min_brightness, max_brightness

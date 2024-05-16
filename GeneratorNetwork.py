@@ -227,8 +227,8 @@ if __name__ == '__main__':
     writer.add_graph(test_generator, dummy_input)
     writer.close()
 
-def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False):
-    active_tiles, x_full, n_tiles, real_fluorescent = dataset.get_well_sample()
+def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=None, return_images=False):
+    active_tiles, x_full, n_tiles, real_fluorescent = dataset.get_well_sample(well)
     print("Time to infer")
     # create 1080 x 1080 black image
     flourescent_image = np.zeros((3, 1080, 1080))
@@ -342,6 +342,9 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
     mip_trans = MaximumIntensityProjection(equalization_method="linear")
     bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list))
     bf_real, dead_real, live_real = mip_trans(real_fluorescent)
+
+    if return_images:
+        return bf, dead, live, bf_real, dead_real, live_real
 
     # live = 255 - live
     # dead = 255 - dead

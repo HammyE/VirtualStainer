@@ -407,7 +407,7 @@ class HarmonyDataset(Dataset):
             # load images
             start_time = time.time()
             print(f"equalizing brightfield images for {plate}")
-            mult_params = get_equalization_params(all_images_brightfield)
+            mult_params = get_equalization_params(all_images_brightfield, [0.10,0.99])
             print(f"equalizing dead images for {plate}")
             dead_params = get_equalization_params_parallel(all_images_dead, [0.01, 0.999])
             print(f"equalizing live images for {plate}")
@@ -700,8 +700,13 @@ class HarmonyDataset(Dataset):
             print(f"With index {idx}")
             raise e
 
-    def get_well_sample(self):
-        well = np.random.choice(self.wells)
+    def get_well_sample(self, well=None):
+        if well is not None:
+            if well not in self.wells:
+                raise ValueError(f"Well {well} not in dataset.")
+        else:
+            well = np.random.choice(self.wells)
+
         measurement = well.split("f")[0][:-6]
 
         x = None
