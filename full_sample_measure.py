@@ -153,7 +153,7 @@ if __name__ == '__main__':
     print("Loading dataset...")
 
     disallowed_datasets = [
-        '2307130102__2023-07-23T08_50_42-Measurement 11',
+        #'2307130102__2023-07-23T08_50_42-Measurement 11',
         #'2307130202__2023-07-23T10_32_16-Measurement 11',
         #'2307130302__2023-07-23T12_13_49-Measurement 11'
     ]
