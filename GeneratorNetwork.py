@@ -229,10 +229,13 @@ if __name__ == '__main__':
 
 def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=None, return_images=False):
     active_tiles, x_full, n_tiles, real_fluorescent = dataset.get_well_sample(well)
+    mask = dataset.get_mask(well)
     print("Time to infer")
     # create 1080 x 1080 black image
     flourescent_image = np.zeros((3, 1080, 1080))
     bf_image = np.ones((1080, 1080))
+    bf_anti_image = np.ones((1080, 1080))
+    anti_image_done = False
     flourescent_list = []
     bf_list = []
     adjustment_matrix = np.zeros((1, 1080, 1080))
@@ -299,9 +302,13 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
                     flourescent_image[0:2, i:i + TILE_SIZE, j:j + TILE_SIZE] += tile * tile_filters[tile_idx]
                     bf_image[i:i + TILE_SIZE, j:j + TILE_SIZE] = bf_tile[2]
                     tiles_used += 1
+                    if not anti_image_done:
+                        bf_anti_image[i:i + TILE_SIZE, j:j + TILE_SIZE] = 0
 
                 if okay:
                     tile_idx += 1
+
+        anti_image_done = True
 
         # flourescent_image = flourescent_image / adjustment_matrix
 
@@ -340,8 +347,10 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
         live_list.append((flourescent_list[i][1] * 255.0 / (255.0 / (live_max - live_min))) + live_min)
         bf_list_scaled[i] = (bf_list_scaled[i] / (255.0 / (bf_max - bf_min))) + bf_min
     mip_trans = MaximumIntensityProjection(equalization_method="linear")
-    bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list))
-    bf_real, dead_real, live_real = mip_trans(real_fluorescent)
+    bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list), mask=mask)
+    bf_anti_image = bf_anti_image * np.quantile(bf, 0.99)
+    bf = bf + bf_anti_image
+    bf_real, dead_real, live_real = mip_trans(real_fluorescent, mask=mask)
 
     if return_images:
         return bf, dead, live, bf_real, dead_real, live_real

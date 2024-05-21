@@ -725,9 +725,9 @@ class HarmonyDataset(Dataset):
         for depth_idx, depth in enumerate(self.depths[well]):
 
 
-            full_bf.append(cv2.imread(self.bf_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
-            full_dead.append(cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
-            full_live.append(cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
+            full_bf.append(equalize(cv2.imread(self.bf_stacks[well][depth], cv2.IMREAD_ANYDEPTH), self.equalization_params_brightfield[measurement]))
+            full_dead.append(equalize(cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_ANYDEPTH), self.equalization_params_dead[measurement]))
+            full_live.append(equalize(cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_ANYDEPTH), self.equalization_params_live[measurement]))
 
 
             x_i = torch.zeros((n_tiles, 5, self.tile_size, self.tile_size))
@@ -750,6 +750,9 @@ class HarmonyDataset(Dataset):
             x[depth_idx * n_tiles:(depth_idx + 1) * n_tiles] = x_i
 
         return active_tiles, x, n_tiles, (full_bf, full_dead, full_live)
+
+    def get_mask(self, well):
+        return cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
 
 
 

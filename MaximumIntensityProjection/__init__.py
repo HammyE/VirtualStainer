@@ -124,7 +124,7 @@ class MaximumIntensityProjection(object):
         self.debug = False
         self.equalization_method = equalization_method  # "clahe", "histogram", "linear"
 
-    def __call__(self, img_set, slices=None):
+    def __call__(self, img_set, slices=None, mask=None):
         bf_img_list, dead_img_list, live_img_list = img_set
 
         # Select a number of slices if specified, at a random depth
@@ -149,6 +149,21 @@ class MaximumIntensityProjection(object):
                                               start=start)
         live_channel = self.__one_channel_mip(live_img_list, equalization=self.equalization_method, stop=stop,
                                               start=start)
+
+        if mask is not None:
+            # Expand the mask edges 10 pixels to avoid edge effects and make everything else 0
+            plt.subplot(1, 2, 1)
+            plt.imshow(mask, cmap='gray')
+            mask = cv2.dilate(mask, np.ones((10, 10), np.uint8), iterations=1)
+            mask = cv2.erode(mask, np.ones((10, 10), np.uint8), iterations=1)
+            plt.subplot(1, 2, 2)
+            plt.imshow(mask, cmap='gray')
+            plt.show()
+
+            # Apply the mask to the images
+            dead_channel = cv2.bitwise_and(dead_channel, dead_channel, mask=mask)
+            live_channel = cv2.bitwise_and(live_channel, live_channel, mask=mask)
+
 
         if self.debug:
             fig, axs = plt.subplots(2, 3, figsize=(30, 20))
@@ -210,7 +225,7 @@ class MaximumIntensityProjection(object):
     def __repr__(self):
         return self.__class__.__name__ + '()'
 
-    def __linear_contrast_stretching(self, image, min_percentile=1, max_percentile=99):
+    def __linear_contrast_stretching(self, image, min_percentile=0, max_percentile=100):
         """
         Apply linear contrast stretching to a single-channel image.
 
