@@ -24,10 +24,6 @@ def get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=None
     if subset is not None:
         wells = np.random.choice(wells, subset)
 
-        print(f"Subset of {subset} wells selected.")
-        print(f"Subset of wells: {wells}")
-
-
     with (torch.no_grad()):
         n_wells = len(wells)
 
