@@ -720,6 +720,8 @@ class HarmonyDataset(Dataset):
         full_dead = []
         full_bf = []
 
+        mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+
         for depth_idx, depth in enumerate(self.depths[well]):
 
 
@@ -733,7 +735,7 @@ class HarmonyDataset(Dataset):
                 bf_img = cv2.imread(self.bf_stacks[well][sub_depth], cv2.IMREAD_ANYDEPTH)
                 bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
 
-                tiles, _, _, active_tiles = self.tile_transform(bf_img, active_tiles)
+                tiles, _, _, active_tiles = self.tile_transform(bf_img, mask, active_tiles)
 
                 if n_tiles == 1:
                     print("n_tiles == 1")

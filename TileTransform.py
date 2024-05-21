@@ -48,7 +48,7 @@ class TileTransform:
         self.transform = transform
         self.debug = False
 
-    def __call__(self, img_set, active_tiles=None):
+    def __call__(self, img_set, mask, active_tiles=None):
         '''
         This method is called when the transform is applied to the images.
         :param img_set: tuple, set of images to be transformed
@@ -64,7 +64,7 @@ class TileTransform:
             live_img = None
 
         if active_tiles is None:
-            bf_tiles, active_tiles = self.__tile_image(bf_img)
+            bf_tiles, active_tiles = self.__tile_image(bf_img, mask)
         else:
             bf_tiles = self.__passive_tiling(bf_img, active_tiles)
 
@@ -106,14 +106,12 @@ class TileTransform:
 
         return mask
 
-    def __tile_image(self, img, cmap="gray"):
+    def __tile_image(self, img, mask, cmap="gray"):
         """
         This method is used to tile the image.
         :param img: PIL.Image, image to be tiled
         :return: list, list of tiles
         """
-
-        mask = self.get_mask(img)
 
         # Display the mask
         if self.debug:
