@@ -749,16 +749,7 @@ class HarmonyDataset(Dataset):
 
             x[depth_idx * n_tiles:(depth_idx + 1) * n_tiles] = x_i
 
-        return active_tiles, x, n_tiles, (full_bf, full_dead, full_live)
-
-    def get_mask(self, well):
-        try:
-            return cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
-        except KeyError:
-            print(f"Well {well} not in dataset.")
-            #print(f"Available wells: {self.wells}")
-            #print(f"Available masks: {self.masks.keys()}")
-            return np.ones((self.image_size, self.image_size), dtype=np.uint8)
+        return active_tiles, x, n_tiles, (full_bf, full_dead, full_live), mask
 
 
 
