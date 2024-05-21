@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # load data
     transform = transforms.Compose([
-        RangeTransform(in_range=(0, 255), out_range=(0, 1)),
+        RangeTransform(in_range=(0, 2**16), out_range=(0, 1)),
     ])
 
     print("Loading dataset...")

@@ -39,7 +39,7 @@ def get_equalization_params(img_set, quantiles=None):
 
     if quantiles is not None:
         brightness_count = {}
-        for i in range(256):
+        for i in range(2**16):
             brightness_count[i] = 0
 
         print(f"Calculating brightness count for {len(img_set)}")
@@ -47,22 +47,22 @@ def get_equalization_params(img_set, quantiles=None):
         for image in img_set:
             if print_idx % 100 == 0:
                 print(f"Processing image {print_idx}")
-            image = cv2.imread(image)
-            for i in range(256):
+            image = cv2.imread(image, cv2.IMREAD_ANYDEPTH)
+            for i in range(2**16-1):
                 brightness_count[i] += np.sum(image == i)
 
             print_idx += 1
 
         total_pixels = sum(brightness_count.values())
         min_brightness = 0
-        max_brightness = 255
+        max_brightness = 2**16-1
         min_count = 0
         max_count = total_pixels
 
         hist_min = 0
-        hit_max = 255
+        hist_max = 2**16
 
-        for i in range(256):
+        for i in range(2**16):
             min_count += brightness_count[i]
             if min_count > total_pixels * quantiles[0]:
                 min_brightness = i
@@ -70,7 +70,7 @@ def get_equalization_params(img_set, quantiles=None):
             else:
                 hist_min = i
 
-        for i in range(255, -1, -1):
+        for i in range(2**16, -1, -1):
             max_count -= brightness_count[i]
             if max_count < total_pixels * quantiles[1]:
                 max_brightness = i
@@ -89,7 +89,7 @@ def get_equalization_params(img_set, quantiles=None):
         #plt.yscale('log')
         plt.axvline(min_brightness + 0.5, color='r')
         plt.axvline(max_brightness - 0.5, color='r')
-        plt.xticks(range(0, 30, 2))
+        plt.xticks(range(0, max_brightness + max_brightness//15, max_brightness//15))
         plt.show()
 
         return min_brightness, max_brightness
@@ -104,7 +104,7 @@ def get_equalization_params(img_set, quantiles=None):
     for image in img_set:
         if print_idx % 100 == 0:
             print(f"Processing image {print_idx}")
-        image = cv2.imread(image)
+        image = cv2.imread(image, cv2.IMREAD_ANYDEPTH)
         min_brightness = min(min_brightness, np.min(image))
         max_brightness = max(max_brightness, np.max(image))
         print_idx += 1
@@ -165,11 +165,11 @@ class MaximumIntensityProjection(object):
             axs[0, 2].axis('off')
 
             # histograms
-            axs[1, 0].hist(np.array(bf_channel).ravel(), bins=256, range=(0, 255), fc='k', ec='k')
+            axs[1, 0].hist(np.array(bf_channel).ravel(), bins=1000, range=(0, 255), fc='k', ec='k')
             axs[1, 0].set_title('Brightfield Histogram')
-            axs[1, 1].hist(np.array(dead_channel).ravel(), bins=256, range=(0, 255), fc='g', ec='g')
+            axs[1, 1].hist(np.array(dead_channel).ravel(), bins=1000, range=(0, 255), fc='g', ec='g')
             axs[1, 1].set_title('Dead Histogram')
-            axs[1, 2].hist(np.array(live_channel).ravel(), bins=256, range=(0, 255), fc='y', ec='y')
+            axs[1, 2].hist(np.array(live_channel).ravel(), bins=1000, range=(0, 255), fc='y', ec='y')
             axs[1, 2].set_title('Live Histogram')
             plt.show()
 
@@ -334,28 +334,30 @@ class MaximumIntensityProjection(object):
 
 
 def process_images(image_chunk, brightness_count, lock):
-    local_count = {i: 0 for i in range(256)}
+    local_count = {i: 0 for i in range(2**16)}
     print_idx = 0
     for image_path in image_chunk:
-        if print_idx % 50 == 0:
+        if print_idx % 10 == 0:
             print(f"Processing image {print_idx}")
         print_idx += 1
-        image = cv2.imread(image_path)
-        for i in range(256):
-            local_count[i] += np.sum(image == i)
+        image = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
+        flattened_image = image.flatten()
+        pixels_values, pixel_counts = np.unique(flattened_image, return_counts=True)
+        for key, value in zip(pixels_values, pixel_counts):
+            local_count[key] += value
     with lock:
-        for i in range(256):
+        for i in range(2**16):
             brightness_count[i] += local_count[i]
 
 
 def get_equalization_params_parallel(img_set, quantiles=None):
-    num_workers = multiprocessing.cpu_count() * 2  # Number of available CPU cores
+    num_workers = multiprocessing.cpu_count()  # Number of available CPU cores
     chunk_size = len(img_set) // num_workers
     print(num_workers)
 
     # Set up a manager to handle shared data
     manager = multiprocessing.Manager()
-    brightness_count = manager.dict({i: 0 for i in range(256)})
+    brightness_count = manager.dict({i: 0 for i in range(2**16)})
     lock = manager.Lock()
 
     # Create chunks of the image set
@@ -370,13 +372,13 @@ def get_equalization_params_parallel(img_set, quantiles=None):
 
     total_pixels = sum(brightness_count.values())
     min_brightness = 0
-    max_brightness = 255
+    max_brightness = 2**16 -1
     min_count = 0
     max_count = total_pixels
 
     # Calculate the histogram limits
 
-    for i in range(256):
+    for i in range(2**16):
         min_count += brightness_count[i]
         if quantiles is not None:
             if min_count > total_pixels * quantiles[0]:
@@ -384,7 +386,7 @@ def get_equalization_params_parallel(img_set, quantiles=None):
                 break
 
 
-    for i in range(255, -1, -1):
+    for i in range(2**16-1, -1, -1):
         max_count -= brightness_count[i]
         if quantiles is not None:
             if max_count < total_pixels * quantiles[1]:
@@ -395,13 +397,13 @@ def get_equalization_params_parallel(img_set, quantiles=None):
         max_brightness += 1
 
     # Optionally, visualize the histogram and cutoffs
-    plt.bar(range(256), [brightness_count.get(i, 0) for i in range(256)])
+    plt.hist(list(brightness_count.values()), bins=1000, range=(0, 30000))
     plt.axvline(min_brightness, color='r')
     plt.axvline(max_brightness, color='r')
-    plt.yscale('log')
-    plt.xticks(range(0, 70, 5))
+    #plt.yscale('log')
+    plt.xticks(range(0, 30000, 500))
     # set window to span 0-70
-    plt.xlim(0, 70)
+    plt.xlim(0, 30000)
     plt.show()
 
     return min_brightness, max_brightness

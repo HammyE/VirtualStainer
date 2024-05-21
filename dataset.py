@@ -162,7 +162,7 @@ class HarmonyDataset(Dataset):
             if self.debug: print(f"Finding potential centers for well {well}...")
             final_mask = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
             for level in self.bf_stacks[well]:
-                img = cv2.imread(level, cv2.IMREAD_GRAYSCALE)
+                img = cv2.imread(level, cv2.IMREAD_ANYDEPTH)
                 img = equalize(img, self.equalization_params_brightfield[measurement])
                 mask = self.tile_transform.get_mask(img)
                 final_mask = np.max([final_mask, mask], axis=0)
@@ -190,13 +190,13 @@ class HarmonyDataset(Dataset):
             blur_list = []
             mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
             for img in self.bf_stacks[well]:
-                img = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
+                img = cv2.imread(img, cv2.IMREAD_ANYDEPTH)
                 img = equalize(img, self.equalization_params_brightfield[measurement])
                 blur_list.append(get_blur(img, mask))
 
             for dead, live in zip(self.dead_stacks[well], self.live_stacks[well]):
-                dead_img = cv2.imread(dead, cv2.IMREAD_GRAYSCALE)
-                live_img = cv2.imread(live, cv2.IMREAD_GRAYSCALE)
+                dead_img = cv2.imread(dead, cv2.IMREAD_ANYDEPTH)
+                live_img = cv2.imread(live, cv2.IMREAD_ANYDEPTH)
                 dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
                 live_img = equalize(live_img, self.equalization_params_live[measurement])
                 flourescent_intensity_list.append(np.max([np.mean(live_img), np.mean(dead_img)]))
@@ -260,7 +260,7 @@ class HarmonyDataset(Dataset):
                 right = 0
                 top = self.image_size
                 bottom = 0
-                mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+                mask = cv2.imread(self.masks[well], cv2.IMREAD_ANYDEPTH)
                 for pixel in np.argwhere(mask > 0):
                     left = np.min([left, int(pixel[0])])
                     right = np.max([right, int(pixel[0])])
@@ -274,9 +274,9 @@ class HarmonyDataset(Dataset):
 
                 try:
                     for i in range(0, n_layers, int(n_layers / 16)):
-                        img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
-                        dead = cv2.imread(self.dead_stacks[well][i], cv2.IMREAD_GRAYSCALE)
-                        live = cv2.imread(self.live_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                        img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_ANYDEPTH)
+                        dead = cv2.imread(self.dead_stacks[well][i], cv2.IMREAD_ANYDEPTH)
+                        live = cv2.imread(self.live_stacks[well][i], cv2.IMREAD_ANYDEPTH)
 
                         dead = equalize(dead, self.equalization_params_dead[measurement])
                         live = equalize(live, self.equalization_params_live[measurement])
@@ -407,7 +407,7 @@ class HarmonyDataset(Dataset):
             # load images
             start_time = time.time()
             print(f"equalizing brightfield images for {plate}")
-            mult_params = get_equalization_params(all_images_brightfield, [0.10,0.99])
+            mult_params = get_equalization_params(all_images_brightfield)
             print(f"equalizing dead images for {plate}")
             dead_params = get_equalization_params_parallel(all_images_dead, [0.01, 0.999])
             print(f"equalizing live images for {plate}")
@@ -444,6 +444,9 @@ class HarmonyDataset(Dataset):
         if self.len is not None:
             return self.len
         self.len = len(self.wells) * self.depth_range
+        print(f"n wells: {len(self.wells)}")
+        print(f"n depths: {self.depth_range}")
+        print(f"Length: {self.len}")
         return self.len
 
     def __getitem__(self, idx):
@@ -483,7 +486,7 @@ class HarmonyDataset(Dataset):
 
             for i in range(depth - self.depth_padding, depth + self.depth_padding + 1):
                 try:
-                    bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_GRAYSCALE)
+                    bf_img = cv2.imread(self.bf_stacks[well][i], cv2.IMREAD_ANYDEPTH)
                     bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
                     bf_images.append(bf_img)
                 except IndexError as e:
@@ -493,13 +496,13 @@ class HarmonyDataset(Dataset):
                     print(f"Depth: {depth}")
                     raise e
 
-            dead_img = cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
-            live_img = cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE)
+            dead_img = cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_ANYDEPTH)
+            live_img = cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_ANYDEPTH)
 
             dead_img = equalize(dead_img, self.equalization_params_dead[measurement])
             live_img = equalize(live_img, self.equalization_params_live[measurement])
 
-            mask = cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
+            mask = cv2.imread(self.masks[well], cv2.IMREAD_ANYDEPTH)
             try:
                 potential_centers = np.load(self.potential_centers[well])
             except Exception as e:
@@ -720,14 +723,14 @@ class HarmonyDataset(Dataset):
         for depth_idx, depth in enumerate(self.depths[well]):
 
 
-            full_bf.append(cv2.imread(self.bf_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
-            full_dead.append(cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
-            full_live.append(cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_GRAYSCALE))
+            full_bf.append(cv2.imread(self.bf_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
+            full_dead.append(cv2.imread(self.dead_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
+            full_live.append(cv2.imread(self.live_stacks[well][depth], cv2.IMREAD_ANYDEPTH))
 
 
             x_i = torch.zeros((n_tiles, 5, self.tile_size, self.tile_size))
             for sub_depth_idx, sub_depth in enumerate(range(depth - self.depth_padding, depth + self.depth_padding + 1)):
-                bf_img = cv2.imread(self.bf_stacks[well][sub_depth], cv2.IMREAD_GRAYSCALE)
+                bf_img = cv2.imread(self.bf_stacks[well][sub_depth], cv2.IMREAD_ANYDEPTH)
                 bf_img = equalize(bf_img, self.equalization_params_brightfield[measurement])
 
                 tiles, _, _, active_tiles = self.tile_transform(bf_img, active_tiles)

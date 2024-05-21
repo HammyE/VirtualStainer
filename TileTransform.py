@@ -91,10 +91,10 @@ class TileTransform:
         # Identify the biggest object in the image
 
         img = np.array(img)
-        img = 256 - img
+        img = 2**16 - img
 
         img = cv2.convertScaleAbs(img)
-        _, thresh = cv2.threshold(img, 47, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, thresh = cv2.threshold(img, 12000, 2**16-1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         largest_contour = max(contours, key=cv2.contourArea)
         mask = np.zeros_like(img)
