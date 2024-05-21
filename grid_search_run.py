@@ -29,10 +29,6 @@ def worker_func(shared_param_sets, lock, gpu_id):
 
         # Now, train the model with these parameters on the assigned GPU
         params['DEVICE'] = torch.device(f'cuda:{gpu_id}')
-        # wait a random amount of time to avoid all processes starting at the same time
-        n_seconds = np.random.randint(0, 240)
-        print(f"Process {params['Process']} waiting for {n_seconds} seconds.")
-        time.sleep(n_seconds)
         train_model(params)  # Your training function
 
 
@@ -49,7 +45,7 @@ if __name__ == '__main__':
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
-    EPOCHS = 5
+    EPOCHS = 3
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
@@ -76,13 +72,9 @@ if __name__ == '__main__':
         RangeTransform(in_range=(0, 2**16), out_range=(0, 1)),
     ])
 
-    print("Loading dataset...")
 
-    print("Dataset loaded.")
 
-    print("Loading data loader...")
 
-    print("Data loader loaded.")
 
     learning_rate = [0.01]
     l1_lambda = [0.01, 0.1, 1]
@@ -92,6 +84,8 @@ if __name__ == '__main__':
     run_names = [None]
 
     parameter_sets = []
+
+    print("Loading dataset...")
     dataset = HarmonyDataset(
         root=data_dir,
         equalization="histogram",
@@ -103,6 +97,8 @@ if __name__ == '__main__':
         every_nth=2,
         start_nth=0,
     )
+    print("Dataset loaded.")
+
     process = 0
     for run_name in run_names:
         for lr in learning_rate:
@@ -133,7 +129,7 @@ if __name__ == '__main__':
     print(f"Parameter sets: {len(parameter_sets)}")
 
     n_cuda = torch.cuda.device_count()
-    n_workers = n_cuda * 1
+    n_workers = n_cuda * 2
     n_parameter_sets = len(parameter_sets)
 
     # Setup multiprocessing
