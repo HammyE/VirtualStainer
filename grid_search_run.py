@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 2
+    PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
     EPOCHS = 5
     MIN_ENCODER_DIM = 16
@@ -85,41 +85,11 @@ if __name__ == '__main__':
     print("Data loader loaded.")
 
     learning_rate = [0.01]
-    l1_lambda = [0.1]#, 0.5]
-    l2_lambda = [0.1]
-    D_LR = [0.01]  # [0.001, 0.005, 0.01]
-    G_LR = [0.001]#, 0.01]
-    run_names = [  # "20240422-205546_Process-4",
-        "20240423-165651_Process-3",
-        "20240423-165649_Process-5",
-        "20240423-165127_Process-4",
-        "20240423-165122_Process-2",
-        "20240423-115702_Process-5",
-        "20240423-115653_Process-3",
-        "20240423-115255_Process-4",
-        "20240423-115245_Process-2",
-        "20240423-065557_Process-5",
-        "20240423-065549_Process-3",
-        "20240423-065313_Process-4",
-        "20240423-065303_Process-2",
-        "20240423-015531_Process-5",
-        "20240423-015528_Process-3",
-        "20240423-015427_Process-4",
-        "20240423-015425_Process-2",
-        "20240422-205546_Process-5",
-        "20240422-205546_Process-3",
-        "20240422-205546_Process-2", ]
-
-    run_names = [
-        "20240508-171628_Process-2",
-        "20240508-171628_Process-3",
-        "20240509-043606_Process-2",
-        "20240509-043802_Process-3",
-        "20240509-164927_Process-2",
-        "20240509-164927_Process-3",
-        "20240422-205546_Process-3",
-        "20240422-205546_Process-2"
-    ]
+    l1_lambda = [0.01, 0.1, 1]
+    l2_lambda = [0.1, 1]
+    D_LR = [0.001, 0.005, 0.01]
+    G_LR = [0.001, 0.01]
+    run_names = [None]
 
     parameter_sets = []
     dataset = HarmonyDataset(

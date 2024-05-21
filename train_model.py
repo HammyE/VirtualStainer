@@ -62,7 +62,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_3/{run_name}"
+    log_dir = f"runs_4/{run_name}"
 
     LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
@@ -217,7 +217,7 @@ def train_model(training_params):
             bf_channels = bf_channels.to(DEVICE)
             true_fluorescent = true_fluorescent.to(DEVICE)
 
-            print(f"Batch {batch_idx}")
+
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
 
