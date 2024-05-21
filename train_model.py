@@ -177,6 +177,10 @@ def train_model(training_params):
     bf_channels, true_fluorescent = next(iter_loader)
     test_bf_channels = bf_channels.to(DEVICE)
     test_true_fluorescent = true_fluorescent.to(DEVICE)
+
+    print(f"Min: {torch.min(test_true_fluorescent)}, Max: {torch.max(test_true_fluorescent)}")
+    print(f"Min: {torch.min(test_bf_channels)}, Max: {torch.max(test_bf_channels)}")
+
     indeces = np.arange(0, 4) * PIC_BATCH_SIZE
     dead_sample = test_true_fluorescent[indeces, 0]
     live_sample = test_true_fluorescent[indeces, 1]

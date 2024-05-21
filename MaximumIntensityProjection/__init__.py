@@ -23,10 +23,10 @@ def equalize(sample_img, param):
     '''
 
     min_brightness, max_brightness = param
-    sample_img = (sample_img - min_brightness) * (255.0 / (max_brightness - min_brightness))
+    sample_img = (sample_img - min_brightness) * (2**16 / (max_brightness - min_brightness))
 
     # Clip the values to the range [0, 255]
-    sample_img = np.clip(sample_img, 0, 255).astype(np.uint8)
+    sample_img = np.clip(sample_img, 0, 2**16).astype(np.int32)
 
     return sample_img
 

@@ -92,8 +92,8 @@ if __name__ == '__main__':
     DEPTH_PADDING = 2
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 1
-    BATCH_SIZE = 16
-    EPOCHS = 0
+    BATCH_SIZE = 4
+    EPOCHS = 1
     LEARNING_RATE = 0.002
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     # load data
     transform = transforms.Compose([
-        RangeTransform(in_range=(0, 255), out_range=(0, 1)),
+        RangeTransform(in_range=(0, 2**16), out_range=(0, 1)),
     ])
 
     print("Loading dataset...")
