@@ -229,6 +229,7 @@ if __name__ == '__main__':
 
 def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=None, return_images=False):
     active_tiles, x_full, n_tiles, real_fluorescent = dataset.get_well_sample(well)
+    print("using well", well)
     mask = dataset.get_mask(well)
     print("Time to infer")
     # create 1080 x 1080 black image

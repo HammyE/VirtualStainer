@@ -756,8 +756,8 @@ class HarmonyDataset(Dataset):
             return cv2.imread(self.masks[well], cv2.IMREAD_GRAYSCALE)
         except KeyError:
             print(f"Well {well} not in dataset.")
-            print(f"Available wells: {self.wells}")
-            print(f"Available masks: {self.masks.keys()}")
+            #print(f"Available wells: {self.wells}")
+            #print(f"Available masks: {self.masks.keys()}")
             return np.ones((self.image_size, self.image_size), dtype=np.uint8)
 
 
