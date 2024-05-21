@@ -191,15 +191,15 @@ def train_model(training_params):
     bf_sample = bf_sample.view(-1, 1, TILE_SIZE, TILE_SIZE)
 
 
-    dead_real_grid = torchvision.utils.make_grid(dead_sample)
-    live_real_grid = torchvision.utils.make_grid(live_sample)
-    bf_real_grid = torchvision.utils.make_grid(bf_sample)
+    dead_real_grid = torchvision.utils.make_grid(dead_sample, value_range=(0, 1),)
+    live_real_grid = torchvision.utils.make_grid(live_sample, value_range=(0, 1))
+    bf_real_grid = torchvision.utils.make_grid(bf_sample, value_range=(0, 1))
 
     test_writer.add_image('brightfield', bf_real_grid, 0)
     test_writer.add_image('live_fluorescent', live_real_grid, 0)
     test_writer.add_image('dead_fluorescent', dead_real_grid, 0)
 
-    logging_steps = 320
+    logging_steps = 0
     for epoch in range(EPOCHS):
         logging_time = 0
         print(f"Epoch {epoch}")
