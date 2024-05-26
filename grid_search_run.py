@@ -45,7 +45,7 @@ if __name__ == '__main__':
     OVERLAP = TILE_SIZE // 4
     PIC_BATCH_SIZE = 3
     BATCH_SIZE = 8
-    EPOCHS = 3
+    EPOCHS = 5
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
@@ -77,11 +77,48 @@ if __name__ == '__main__':
 
 
     learning_rate = [0.01]
-    l1_lambda = [0.01, 0.1, 1]
-    l2_lambda = [0.1, 1]
-    D_LR = [0.001, 0.005, 0.01]
-    G_LR = [0.001, 0.01]
-    run_names = [None]
+    l1_lambda = [1]
+    l2_lambda = [1]
+    D_LR = [0.01]
+    G_LR = [0.01]
+    run_names = [
+        "20240521 - 224927_Process - 2",
+        "20240521 - 224927_Process - 3",
+        "20240521 - 224927_Process - 4",
+        "20240521 - 224927_Process - 5",
+        "20240522 - 054727_Process - 4",
+        "20240522 - 054844_Process - 2",
+        "20240522 - 054932_Process - 3",
+        "20240522 - 054944_Process - 5",
+        "20240522 - 125503_Process - 4",
+        "20240522 - 125622_Process - 2",
+        "20240522 - 125643_Process - 3",
+        "20240522 - 125647_Process - 5",
+        "20240522 - 200743_Process - 3",
+        "20240522 - 200756_Process - 5",
+        "20240522 - 200758_Process - 4",
+        "20240522 - 200915_Process - 2",
+        "20240523 - 032321_Process - 4",
+        "20240523 - 032353_Process - 3",
+        "20240523 - 032513_Process - 5",
+        "20240523 - 032701_Process - 2",
+        "20240523 - 104612_Process - 3",
+        "20240523 - 104616_Process - 4",
+        "20240523 - 105000_Process - 5",
+        "20240523 - 105025_Process - 2",
+        "20240523 - 155215_Process - 2",
+        "20240523 - 155216_Process - 3",
+        "20240523 - 155216_Process - 4",
+        "20240523 - 155216_Process - 5",
+        "20240523 - 224928_Process - 2",
+        "20240523 - 224949_Process - 4",
+        "20240523 - 225035_Process - 3",
+        "20240523 - 225113_Process - 5",
+        "20240524 - 055236_Process - 4",
+        "20240524 - 055347_Process - 2",
+        "20240524 - 055451_Process - 5",
+        "20240524 - 055519_Process - 3",
+    ]
 
     parameter_sets = []
 
