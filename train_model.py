@@ -97,7 +97,7 @@ def train_model(training_params):
                         key, value = pair.split(": ")
                         print(f"{key}: {value}")
                         training_params[key] = value
-                    continue
+                        continue
 
     except FileNotFoundError:
         print("Didn't find previous parameters")
@@ -151,7 +151,7 @@ def train_model(training_params):
         discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         print("Model loaded")
     except FileNotFoundError:
-        print("Model not found")
+        print(f"Model not found at {old_dir}")
 
     fake_writer = SummaryWriter(f"{log_dir}/fake")
     real_writer = SummaryWriter(f"{log_dir}/real")
