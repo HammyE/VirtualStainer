@@ -162,9 +162,6 @@ if __name__ == '__main__':
                             })
                         process += 1
 
-    # Remove the first 24 parameter sets
-
-    parameter_sets = parameter_sets[24:]
 
     print(f"Parameter sets: {len(parameter_sets)}")
 
