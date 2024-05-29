@@ -237,6 +237,7 @@ def train_model(training_params):
             discriminator.zero_grad()
 
             d_loss.backward(retain_graph=True)
+            print(f"d_loss: {d_loss.item()}")
             d_optimizer.step()
 
             disc_fake_outputs = discriminator(bf_channels, outputs)
@@ -313,7 +314,10 @@ def train_model(training_params):
                     disc_true_outputs = np.round(disc_true_outputs)
                     disc_fake_outputs = np.round(disc_fake_outputs)
                     true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
-                    fake_accuracy = np.sum(disc_fake_outputs) / len(disc_fake_outputs)
+                    fake_accuracy = 1.0 - np.sum(disc_fake_outputs) / len(disc_fake_outputs)
+
+                    total_accuracy = (true_accuracy + fake_accuracy) / 2
+
                     progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
                     progress_writer.add_scalar('Fake Accuracy (% of fake classified as fake)', fake_accuracy, logging_steps)
 
