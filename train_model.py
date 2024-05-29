@@ -226,17 +226,20 @@ def train_model(training_params):
 
             outputs = generator(bf_channels)
 
-            disc_labels_true_labels = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+            # Discriminator labels
+            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+            disc_labels_fake = torch.zeros((TRUE_BATCH_SIZE, 1)).to(DEVICE)
 
             disc_true_outputs = discriminator(bf_channels, true_fluorescent)
             disc_fake_outputs = discriminator(bf_channels, outputs)
 
-            d_loss = (d_loss_fn(disc_true_outputs, disc_labels_true_labels) + d_loss_fn(disc_fake_outputs,
-                                                                                        1 - disc_labels_true_labels)) / 2
+            d_loss_real = d_loss_fn(disc_true_outputs, disc_labels_true)
+            d_loss_fake = d_loss_fn(disc_fake_outputs, disc_labels_fake)
+            d_loss = (d_loss_real + d_loss_fake) / 2
 
             discriminator.zero_grad()
 
-            d_loss.backward(retain_graph=True)
+            d_loss.backward()#retain_graph=True)
             print(f"d_loss: {d_loss.item()}")
             d_optimizer.step()
 
