@@ -218,8 +218,10 @@ def train_model(training_params):
 
         for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
             start_time = time.time()
-            bf_channels = bf_channels.to(DEVICE)
-            true_fluorescent = true_fluorescent.to(DEVICE)
+
+            if batch_idx == 0:
+                bf_channels = bf_channels.to(DEVICE)
+                true_fluorescent = true_fluorescent.to(DEVICE)
 
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
@@ -237,7 +239,7 @@ def train_model(training_params):
             d_loss_fake = d_loss_fn(disc_fake_outputs, disc_labels_fake)
             print(f"Discriminator loss real: {d_loss_real.item()}, Discriminator loss fake: {d_loss_fake.item()}")
             print(f"Discriminator true outputs: {disc_true_outputs.mean()}, Discriminator fake outputs: {disc_fake_outputs.mean()}")
-            d_loss = (d_loss_real + d_loss_fake*2) / 2
+            d_loss = (d_loss_real + d_loss_fake) / 2
 
             discriminator.zero_grad()
 
