@@ -63,7 +63,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_5/{run_name}"
+    log_dir = f"runs_6/{run_name}"
 
     LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
@@ -146,7 +146,7 @@ def train_model(training_params):
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
     try:
-        old_dir = log_dir.replace("runs_5", "runs_4")
+        old_dir = log_dir.replace("runs_6", "runs_5")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
         discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         print("Model loaded")

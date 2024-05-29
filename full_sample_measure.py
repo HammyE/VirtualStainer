@@ -237,7 +237,7 @@ if __name__ == '__main__':
         #    f"Generator network architecture:\n{generator}\nNumber of parameters: {sum(p.numel() for p in generator.parameters())}")
 
 
-        #generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available())
+        generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available(), debug=False)
 
         full_mse_dead, full_mse_live, full_mae_dead, full_mae_live, full_ssim_dead, full_ssim_live, PSNR_dead, PSNR_live, n_wells = get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=3)
 

@@ -92,11 +92,47 @@ class HarmonyDataset(Dataset):
             # Load or create equalization params, and cache them
             self.load_equalization(measurement)
 
+
+
             images = os.listdir(os.path.join(root, measurement, "images"))
 
             # Extract the wells from the images
             if self.debug: print(f"Extracting wells from measurement {measurement}...")
             plate_wells = self.extract_wells(images, measurement)
+
+            if self.debug:
+                plt.figure(figsize=(10, 3))
+                plt.subplot(1, 3, 1)
+
+                plt.imshow(np.ones((1080,1080))*2**16 - cv2.imread(self.bf_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), cmap='gray', vmin=0, vmax=2**16)
+                plt.title("Brightfield Raw")
+                plt.axis('off')
+                plt.subplot(1, 3, 2)
+                plt.imshow(cv2.imread(self.dead_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), cmap='Greens', vmin=0, vmax=2**16)
+                plt.title("Dead Raw")
+                plt.axis('off')
+                plt.subplot(1, 3, 3)
+                plt.imshow(cv2.imread(self.live_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), cmap='Oranges', vmin=0, vmax=2**16)
+                plt.title("Live Raw")
+                plt.axis('off')
+                plt.show()
+
+                plt.figure(figsize=(10, 3))
+                plt.subplot(1, 3, 1)
+                plt.imshow(np.ones((1080,1080))*2**16 - equalize(cv2.imread(self.bf_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), self.equalization_params_brightfield[measurement]), cmap='gray', vmin=0, vmax=2**16)
+                plt.title("Brightfield Equalized")
+                plt.axis('off')
+                plt.subplot(1, 3, 2)
+                plt.imshow(equalize(cv2.imread(self.dead_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), self.equalization_params_dead[measurement]), cmap='Greens', vmin=0, vmax=2**16)
+                plt.title("Dead Equalized")
+                plt.axis('off')
+                plt.subplot(1, 3, 3)
+                plt.imshow(equalize(cv2.imread(self.live_stacks[self.wells[0]][12], cv2.IMREAD_ANYDEPTH), self.equalization_params_live[measurement]), cmap='Oranges', vmin=0, vmax=2**16)
+                plt.title("Live Equalized")
+                plt.axis('off')
+                plt.show()
+
+            input()
 
             # set image size
             self.image_size = cv2.imread(self.bf_stacks[self.wells[0]][0], cv2.IMREAD_GRAYSCALE).shape[0]
@@ -622,15 +658,15 @@ class HarmonyDataset(Dataset):
 
                     plt.subplot(2, 1, 1)
                     if plt_pic == 0:
-                        plt.imshow(bf_img, cmap='gray', vmin=0, vmax=255)
+                        plt.imshow(bf_img, cmap='gray', vmin=0, vmax=2**16)
                         plt.title('Brightfield')
                         plt.axis('off')
                     # Draw bounding box
-                    plt.plot([top, top], [right, left], 'b', linewidth=0.5)
-                    plt.plot([top, bottom], [left, left], 'b', linewidth=0.5)
-                    plt.plot([bottom, bottom], [left, right], 'b', linewidth=0.5)
-                    plt.plot([bottom, top], [right, right], 'b', linewidth=0.5)
-                    plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=0.5)
+                    plt.plot([top, top], [right, left], 'b', linewidth=1.5)
+                    plt.plot([top, bottom], [left, left], 'b', linewidth=1.5)
+                    plt.plot([bottom, bottom], [left, right], 'b', linewidth=1.5)
+                    plt.plot([bottom, top], [right, right], 'b', linewidth=1.5)
+                    plt.scatter(center[1], center[0], c='r', s=10, marker='x', linewidth=1.5)
 
                     plt.subplot(4, 2, 5)
 
@@ -651,19 +687,19 @@ class HarmonyDataset(Dataset):
 
                     plt.subplot(8, 4, row * 4 + col + 2 + 16)
                     bf_tile = x[picture, 2]
-                    plt.imshow(bf_tile, cmap='gray', vmin=0, vmax=255)
+                    plt.imshow(bf_tile, cmap='gray', vmin=0, vmax=2**16)
                     plt.title('Brightfield Tile ' + str(plt_pic))
                     plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
                     plt.axis('off')
 
                     plt.subplot(8, 4, 8 + row * 4 + col + 16)
-                    plt.imshow(dead_tile, cmap='Greens', vmin=0, vmax=255)
+                    plt.imshow(dead_tile, cmap='Greens', vmin=0, vmax=2**16)
                     plt.title('Dead Tile ' + str(plt_pic))
                     plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
                     plt.axis('off')
 
                     plt.subplot(8, 4, 10 + row * 4 + col + 16)
-                    plt.imshow(live_tile, cmap='Oranges', vmin=0, vmax=255)
+                    plt.imshow(live_tile, cmap='Oranges', vmin=0, vmax=2**16)
                     plt.title('Live Tile ' + str(plt_pic))
                     plt.scatter(round(self.tile_size / 2), round(self.tile_size / 2), c='r', s=10, marker='x')
                     plt.axis('off')

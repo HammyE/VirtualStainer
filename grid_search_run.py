@@ -43,13 +43,14 @@ if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 3
-    BATCH_SIZE = 8
-    EPOCHS = 2
+    PIC_BATCH_SIZE = 2
+    BATCH_SIZE = 24
+    EPOCHS = 4
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     SAVE_MODEL = True
     DEPTH_PADDING = 2
+    n_parallel = 1
 
     # For M1 Macs check for mps
     if DEVICE.type == 'cpu':
@@ -69,18 +70,14 @@ if __name__ == '__main__':
 
     # load data
     transform = transforms.Compose([
-        RangeTransform(in_range=(0, 2**16), out_range=(0, 1)),
+        RangeTransform(in_range=(0, 2 ** 16), out_range=(0, 1)),
     ])
-
-
-
-
 
     learning_rate = [0.01]
     l1_lambda = [1]
     l2_lambda = [1]
-    D_LR = [0.01]
-    G_LR = [0.01]
+    D_LR = [0.001]
+    G_LR = [0.001]
     run_names = [
         "20240521-224927_Process-2",
         "20240521-224927_Process-3",
@@ -120,6 +117,13 @@ if __name__ == '__main__':
         "20240524-055519_Process-3",
     ]
 
+    run_names = [
+        "20240523-032701_Process-2",
+        "20240522-054944_Process-5",
+        "20240523-155216_Process-4",
+        "20240521-224927_Process-5"
+    ]
+
     parameter_sets = []
 
     print("Loading dataset...")
@@ -143,7 +147,6 @@ if __name__ == '__main__':
                 for l2 in l2_lambda:
                     for g_lr in G_LR:
                         for d_lr in D_LR:
-
                             parameter_sets.append({
                                 'Process': process,
                                 'LEARNING_RATE': lr,
@@ -162,11 +165,10 @@ if __name__ == '__main__':
                             })
                         process += 1
 
-
     print(f"Parameter sets: {len(parameter_sets)}")
 
     n_cuda = torch.cuda.device_count()
-    n_workers = n_cuda * 2
+    n_workers = n_cuda * n_parallel
     n_parameter_sets = len(parameter_sets)
 
     # Setup multiprocessing

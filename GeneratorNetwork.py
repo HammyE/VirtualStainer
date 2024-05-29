@@ -227,7 +227,7 @@ if __name__ == '__main__':
     writer.add_graph(test_generator, dummy_input)
     writer.close()
 
-def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=None, return_images=False):
+def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=False, well=None, return_images=False, debug=False):
     active_tiles, x_full, n_tiles, real_fluorescent, mask = dataset.get_well_sample(well)
     print("using well", well)
     print("Time to infer")
@@ -288,7 +288,24 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
         tile_idx = 0
         x = x_full[n_tiles * level:n_tiles * (level + 1)].to(DEVICE)
         with torch.no_grad():
+            if level == 10 and debug:
+                # Save seven bf tiles for debugging
+                for debug_image in range(7):
+                    tile = x[debug_image]
+                    plt.imshow(tile[2].cpu().numpy(), cmap='gray')
+                    plt.axis('off')
+                    plt.savefig(f"bf_tile_{debug_image}.png")
             y = generator(x)
+
+            if level == 10 and debug:
+                for debug_image in range(7):
+                    tile = y[debug_image]
+                    plt.imshow(tile[1].cpu().numpy(), cmap='Oranges')
+                    plt.axis('off')
+                    plt.savefig(f"live_tile_{debug_image}.png")
+                    plt.imshow(tile[0].cpu().numpy(), cmap='Greens')
+                    plt.axis('off')
+                    plt.savefig(f"dead_tile_{debug_image}.png")
 
         for i in range(0, 1080, TILE_SIZE - OVERLAP):
             for j in range(0, 1080, TILE_SIZE - OVERLAP):
@@ -350,6 +367,23 @@ def generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=F
     bf, dead, live = mip_trans((bf_list_scaled, dead_list, live_list), mask=mask)
     bf_anti_image = bf_anti_image * np.quantile(bf, 0.99)
     bf = bf + bf_anti_image
+
+    if debug:
+        for depth in range(5, 12):
+            plt.imshow(bf_list[depth], cmap='gray')
+            plt.axis('off')
+            plt.savefig(f"bf_full_{depth}.png")
+
+            plt.imshow(live_list[depth], cmap='Oranges')
+            plt.axis('off')
+            plt.savefig(f"live_full_{depth}.png")
+
+            plt.imshow(dead_list[depth], cmap='Greens')
+            plt.axis('off')
+            plt.savefig(f"dead_full_{depth}.png")
+
+
+
     bf_real, dead_real, live_real = mip_trans(real_fluorescent, mask=mask)
 
     if return_images:
