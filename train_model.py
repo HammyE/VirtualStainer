@@ -326,7 +326,7 @@ def train_model(training_params):
                     progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
                     progress_writer.add_scalar('Fake Accuracy (% of fake classified as fake)', fake_accuracy, logging_steps)
 
-                    if logging_steps % 10 == 0:
+                    if logging_steps % 10 == 0 and logging_steps != 0:
                         infer_start_time = time.time()
                         plot_buf = generate_full_test(dataset, TILE_SIZE, TILE_SIZE//4, DEVICE, generator)
                         image = PIL.Image.open(plot_buf)
