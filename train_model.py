@@ -264,9 +264,9 @@ def train_model(training_params):
             # Display one pair of real and generated images
             if time.time() - logging_time > 60:
                 with torch.no_grad():
-                    print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
-                          f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
-                          )
+                    # print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
+                    #       f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
+                    #       )
 
                     logging_time = time.time()
 
