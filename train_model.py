@@ -245,21 +245,21 @@ def train_model(training_params):
             print(f"d_loss: {d_loss.item()}")
             d_optimizer.step()
 
-            disc_fake_outputs = discriminator(bf_channels, outputs)
-
-            l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
-            l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
-
-            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
-
-            g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true) + \
-                     L1_LAMBDA * l1_loss_real + \
-                     L2_LAMBDA * l2_loss_real
-
-            generator.zero_grad()
-
-            g_loss.backward()
-            g_optimizer.step()
+            # disc_fake_outputs = discriminator(bf_channels, outputs)
+            #
+            # l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
+            # l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
+            #
+            # disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+            #
+            # g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true) + \
+            #          L1_LAMBDA * l1_loss_real + \
+            #          L2_LAMBDA * l2_loss_real
+            #
+            # generator.zero_grad()
+            #
+            # g_loss.backward()
+            # g_optimizer.step()
 
             # Display one pair of real and generated images
             if time.time() - logging_time > 60:
