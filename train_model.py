@@ -311,9 +311,9 @@ def train_model(training_params):
 
                     # log losses
                     progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
-                    progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
-                    progress_writer.add_scalar('Generator L1 Loss', l1_loss_real.item(), logging_steps)
-                    progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
+                    # progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
+                    # progress_writer.add_scalar('Generator L1 Loss', l1_loss_real.item(), logging_steps)
+                    # progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
 
                     # accuracy
                     disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
