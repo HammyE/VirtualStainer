@@ -43,8 +43,8 @@ if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 2
-    BATCH_SIZE = 24
+    PIC_BATCH_SIZE = 1
+    BATCH_SIZE = 48
     EPOCHS = 4
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     learning_rate = [0.01]
     l1_lambda = [1]
     l2_lambda = [1]
-    D_LR = [0.0000001]
+    D_LR = [0.0000000000001]
     G_LR = [0.0000001]
     run_names = [
         "20240521-224927_Process-2",
