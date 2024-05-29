@@ -219,9 +219,9 @@ def train_model(training_params):
         for batch_idx, (bf_channels, true_fluorescent) in enumerate(loader):
             start_time = time.time()
 
-            if batch_idx == 0:
-                bf_channels = bf_channels.to(DEVICE)
-                true_fluorescent = true_fluorescent.to(DEVICE)
+
+            bf_channels = bf_channels.to(DEVICE)
+            true_fluorescent = true_fluorescent.to(DEVICE)
 
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
@@ -247,28 +247,28 @@ def train_model(training_params):
             print(f"d_loss: {d_loss.item()}")
             d_optimizer.step()
 
-            # disc_fake_outputs = discriminator(bf_channels, outputs)
-            #
-            # l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
-            # l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
-            #
-            # disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
-            #
-            # g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true) + \
-            #          L1_LAMBDA * l1_loss_real + \
-            #          L2_LAMBDA * l2_loss_real
-            #
-            # generator.zero_grad()
-            #
-            # g_loss.backward()
-            # g_optimizer.step()
+            disc_fake_outputs = discriminator(bf_channels, outputs)
+
+            l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
+            l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
+
+            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+
+            g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true) + \
+                     L1_LAMBDA * l1_loss_real + \
+                     L2_LAMBDA * l2_loss_real
+
+            generator.zero_grad()
+
+            g_loss.backward()
+            g_optimizer.step()
 
             # Display one pair of real and generated images
             if time.time() - logging_time > 60:
                 with torch.no_grad():
-                    # print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
-                    #       f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
-                    #       )
+                    print(f"Time taken for batch {batch_idx}: {round(time.time() - start_time, 2)} seconds\n",
+                          f"Discriminator loss: {d_loss.item()}, Generator loss: {g_loss.item()}"
+                          )
 
                     logging_time = time.time()
 
@@ -313,9 +313,9 @@ def train_model(training_params):
 
                     # log losses
                     progress_writer.add_scalar('Discriminator Loss', d_loss.item(), logging_steps)
-                    # progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
-                    # progress_writer.add_scalar('Generator L1 Loss', l1_loss_real.item(), logging_steps)
-                    # progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
+                    progress_writer.add_scalar('Generator Loss', g_loss.item(), logging_steps)
+                    progress_writer.add_scalar('Generator L1 Loss', l1_loss_real.item(), logging_steps)
+                    progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
 
                     # accuracy
                     disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
