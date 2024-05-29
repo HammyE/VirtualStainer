@@ -239,7 +239,7 @@ def train_model(training_params):
 
             discriminator.zero_grad()
 
-            d_loss.backward()#retain_graph=True)
+            d_loss.backward(retain_graph=True)
             print(f"d_loss: {d_loss.item()}")
             d_optimizer.step()
 
