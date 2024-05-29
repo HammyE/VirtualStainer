@@ -77,7 +77,7 @@ if __name__ == '__main__':
     l1_lambda = [1]
     l2_lambda = [1]
     D_LR = [0.00001]
-    G_LR = [0.001]
+    G_LR = [0.00001]
     run_names = [
         "20240521-224927_Process-2",
         "20240521-224927_Process-3",
