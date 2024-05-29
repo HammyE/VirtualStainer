@@ -139,8 +139,6 @@ def train_model(training_params):
     discriminator.to(DEVICE)
 
     g_loss_fn = torch.nn.BCELoss()
-    l1_loss_fn = torch.nn.L1Loss()
-    weighted_l2 = AsymmetricL2Loss(underestimation_weight=2.0)
     d_loss_fn = torch.nn.BCELoss()
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=G_LR)
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
@@ -148,7 +146,7 @@ def train_model(training_params):
     try:
         old_dir = log_dir.replace("runs_6", "runs_5")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
-        discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
+        #discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         print("Model loaded")
     except FileNotFoundError:
         print(f"Model not found at {old_dir}")
@@ -222,7 +220,6 @@ def train_model(training_params):
             start_time = time.time()
             bf_channels = bf_channels.to(DEVICE)
             true_fluorescent = true_fluorescent.to(DEVICE)
-
 
             g_optimizer.zero_grad()
             d_optimizer.zero_grad()
