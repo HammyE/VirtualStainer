@@ -132,8 +132,6 @@ class HarmonyDataset(Dataset):
                 plt.axis('off')
                 plt.show()
 
-            input()
-
             # set image size
             self.image_size = cv2.imread(self.bf_stacks[self.wells[0]][0], cv2.IMREAD_GRAYSCALE).shape[0]
 
