@@ -248,6 +248,20 @@ def train_model(training_params):
 
             d_loss.backward(retain_graph=True)
             print(f"d_loss: {d_loss.item()}")
+
+            # Calculate and log gradient norms
+            d_grad_norms = []
+            for param in discriminator.parameters():
+                if param.grad is not None:
+                    grad_norm = param.grad.data.norm(2).item()
+                    d_grad_norms.append(grad_norm)
+
+            print(f"Discriminator gradient norms:")
+            print(f"Min: {min(d_grad_norms)}, Max: {max(d_grad_norms)}")
+            print(f"Mean: {sum(d_grad_norms) / len(d_grad_norms)}")
+
+            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 1.0)
+
             d_optimizer.step()
 
             disc_fake_outputs = discriminator(bf_channels, outputs)
