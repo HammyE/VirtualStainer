@@ -24,6 +24,12 @@ class DiscriminatorNetwork(nn.Module):
         self.conv3 = nn.Conv2d(64, 128, 3, 1, 1)
         self.conv4 = nn.Conv2d(128, 256, 3, 1, 1)
 
+        self.bn1 = nn.BatchNorm2d(32)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.bn4 = nn.BatchNorm2d(256)
+
+
         self.fc1_size = 256 * (image_size // 16) * (image_size // 16)
 
         self.fc1 = nn.Linear(self.fc1_size, 1024)
@@ -40,16 +46,17 @@ class DiscriminatorNetwork(nn.Module):
         x = torch.cat((brightfield, flourescent), 1)
 
 
-        x = F.relu(self.conv1(x))
+        x = F.leaky_relu(self.bn1(self.conv1(x)), 0.2)
         x = self.max_pool(x)
 
-        x = F.relu(self.conv2(x))
+
+        x = F.leaky_relu(self.bn2(self.conv2(x)), 0.2)
         x = self.max_pool(x)
 
-        x = F.relu(self.conv3(x))
+        x = F.leaky_relu(self.bn3(self.conv3(x)), 0.2)
         x = self.max_pool(x)
 
-        x = F.relu(self.conv4(x))
+        x = F.leaky_relu(self.bn4(self.conv4(x)), 0.2)
         x = self.max_pool(x)
 
         x = x.view(-1, self.fc1_size)
