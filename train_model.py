@@ -147,6 +147,13 @@ def train_model(training_params):
         old_dir = log_dir.replace("runs_6", "runs_5")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
         #discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
+        def weights_init(m):
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+        discriminator.apply(weights_init)
         print("Model loaded")
     except FileNotFoundError:
         print(f"Model not found at {old_dir}")
@@ -260,7 +267,7 @@ def train_model(training_params):
             print(f"Min: {min(d_grad_norms)}, Max: {max(d_grad_norms)}")
             print(f"Mean: {sum(d_grad_norms) / len(d_grad_norms)}")
 
-            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 0.01)
+            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 0.000001)
 
             d_optimizer.step()
 
