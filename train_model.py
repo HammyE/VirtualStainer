@@ -232,6 +232,9 @@ def train_model(training_params):
             disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.9
             disc_labels_fake = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.1
 
+            print(f"Outputs min: {torch.min(outputs)}, Outputs max: {torch.max(outputs)}")
+            print(f"True min: {torch.min(true_fluorescent)}, True max: {torch.max(true_fluorescent)}")
+
             disc_true_outputs = discriminator(bf_channels, true_fluorescent)
             disc_fake_outputs = discriminator(bf_channels, outputs)
 
