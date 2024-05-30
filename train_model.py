@@ -229,8 +229,8 @@ def train_model(training_params):
             outputs = generator(bf_channels)
 
             # Discriminator labels
-            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
-            disc_labels_fake = torch.zeros((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.9
+            disc_labels_fake = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.1
 
             disc_true_outputs = discriminator(bf_channels, true_fluorescent)
             disc_fake_outputs = discriminator(bf_channels, outputs)
