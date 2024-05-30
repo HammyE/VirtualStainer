@@ -43,8 +43,8 @@ if __name__ == '__main__':
     # Hyperparameters
     TILE_SIZE = 128
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 1
-    BATCH_SIZE = 48
+    PIC_BATCH_SIZE = 3
+    BATCH_SIZE = 12
     EPOCHS = 4
     MIN_ENCODER_DIM = 16
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -118,10 +118,8 @@ if __name__ == '__main__':
     ]
 
     run_names = [
-        "20240523-032701_Process-2",
-        "20240522-054944_Process-5",
-        "20240523-155216_Process-4",
-        "20240521-224927_Process-5"
+        "20240524-055236_Process-4",
+        "20240522-054727_Process-4",
     ]
 
     parameter_sets = []
