@@ -260,7 +260,7 @@ def train_model(training_params):
             print(f"Min: {min(d_grad_norms)}, Max: {max(d_grad_norms)}")
             print(f"Mean: {sum(d_grad_norms) / len(d_grad_norms)}")
 
-            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 1.0)
+            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 0.01)
 
             d_optimizer.step()
 
