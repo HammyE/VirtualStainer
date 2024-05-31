@@ -63,7 +63,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_6/{run_name}"
+    log_dir = f"runs_7/{run_name}"
 
     LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
@@ -144,9 +144,10 @@ def train_model(training_params):
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
     try:
-        old_dir = log_dir.replace("runs_6", "runs_5")
+        old_dir = log_dir.replace("runs_7", "runs_6")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
-        #discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
+        old_dir = "runs_6/20240522-054727_Process-4"
+        discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         def weights_init(m):
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
@@ -235,15 +236,15 @@ def train_model(training_params):
 
             outputs = generator(bf_channels)
 
-            # Discriminator labels
-            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.9
-            disc_labels_fake = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)*0.1
-
             print(f"Outputs min: {torch.min(outputs)}, Outputs max: {torch.max(outputs)}")
             print(f"True min: {torch.min(true_fluorescent)}, True max: {torch.max(true_fluorescent)}")
 
             disc_true_outputs = discriminator(bf_channels, true_fluorescent)
             disc_fake_outputs = discriminator(bf_channels, outputs)
+
+            # Discriminator labels
+            disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)*1.0
+            disc_labels_fake = torch.ones_like(disc_fake_outputs).to(DEVICE)*0.0
 
             d_loss_real = d_loss_fn(disc_true_outputs, disc_labels_true)
             d_loss_fake = d_loss_fn(disc_fake_outputs, disc_labels_fake)
@@ -276,7 +277,7 @@ def train_model(training_params):
             l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
             l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
 
-            disc_labels_true = torch.ones((TRUE_BATCH_SIZE, 1)).to(DEVICE)
+            disc_labels_true = torch.ones_like(disc_fake_outputs).to(DEVICE)
 
             g_loss = g_loss_fn(disc_fake_outputs, disc_labels_true) + \
                      L1_LAMBDA * l1_loss_real + \
