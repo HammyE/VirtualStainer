@@ -249,8 +249,8 @@ def train_model(training_params):
                 disc_fake_outputs = discriminator(bf_channels, outputs)
 
             # Discriminator labels
-            disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)#*1.0
-            disc_labels_fake = torch.ones_like(disc_fake_outputs).to(DEVICE)#*0.0
+            disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)*1.0
+            disc_labels_fake = torch.ones_like(disc_fake_outputs).to(DEVICE)*0.0
 
             d_loss_real = d_loss_fn(disc_true_outputs, disc_labels_true)
             d_loss_fake = d_loss_fn(disc_fake_outputs, disc_labels_fake)
@@ -362,10 +362,16 @@ def train_model(training_params):
                     true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
                     fake_accuracy = 1.0 - np.sum(disc_fake_outputs) / len(disc_fake_outputs)
 
+                    if PATCH:
+                        patch_size = 7*7
+                        true_accuracy = true_accuracy / patch_size
+                        fake_accuracy = fake_accuracy / patch_size
+
                     total_accuracy = (true_accuracy + fake_accuracy) / 2
 
                     progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
                     progress_writer.add_scalar('Fake Accuracy (% of fake classified as fake)', fake_accuracy, logging_steps)
+                    progress_writer.add_scalar('Total Accuracy', total_accuracy, logging_steps)
 
                     if logging_steps % 10 == 0 and logging_steps != 0:
                         infer_start_time = time.time()
