@@ -355,18 +355,12 @@ def train_model(training_params):
                     progress_writer.add_scalar('Generator L2 Loss', l2_loss_real.item(), logging_steps)
 
                     # accuracy
-                    disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
-                    disc_fake_outputs = disc_fake_outputs.detach().cpu().numpy()
-                    disc_true_outputs = np.round(disc_true_outputs)
-                    disc_fake_outputs = np.round(disc_fake_outputs)
-                    true_accuracy = np.sum(disc_true_outputs) / len(disc_true_outputs)
-                    fake_accuracy = 1.0 - np.sum(disc_fake_outputs) / len(disc_fake_outputs)
-
-                    if PATCH:
-                        patch_size = 7*7
-                        true_accuracy = true_accuracy / patch_size
-                        fake_accuracy = fake_accuracy / patch_size
-
+                    #disc_true_outputs = disc_true_outputs.detach().cpu().numpy()
+                    #disc_fake_outputs = disc_fake_outputs.detach().cpu().numpy()
+                    disc_true_outputs = torch.round(disc_true_outputs)
+                    disc_fake_outputs = torch.round(disc_fake_outputs)
+                    true_accuracy = torch.sum(disc_true_outputs).item() / torch.sumel(disc_true_outputs)
+                    fake_accuracy = torch.sum(disc_fake_outputs).item() / torch.sumel(disc_fake_outputs)
                     total_accuracy = (true_accuracy + fake_accuracy) / 2
 
                     progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
