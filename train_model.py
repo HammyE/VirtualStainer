@@ -359,8 +359,8 @@ def train_model(training_params):
                     #disc_fake_outputs = disc_fake_outputs.detach().cpu().numpy()
                     disc_true_outputs = torch.round(disc_true_outputs)
                     disc_fake_outputs = torch.round(disc_fake_outputs)
-                    true_accuracy = torch.sum(disc_true_outputs).item() / torch.sumel(disc_true_outputs)
-                    fake_accuracy = torch.sum(disc_fake_outputs).item() / torch.sumel(disc_fake_outputs)
+                    true_accuracy = torch.sum(disc_true_outputs).item() / torch.numel(disc_true_outputs)
+                    fake_accuracy = torch.sum(disc_fake_outputs).item() / torch.numel(disc_fake_outputs)
                     total_accuracy = (true_accuracy + fake_accuracy) / 2
 
                     progress_writer.add_scalar('True Accuracy (% of real classified as real)', true_accuracy, logging_steps)
