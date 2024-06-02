@@ -63,7 +63,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_7/{run_name}"
+    log_dir = f"runs_8/{run_name}"
 
     LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
@@ -144,17 +144,10 @@ def train_model(training_params):
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
     try:
-        old_dir = log_dir.replace("runs_7", "runs_6")
+        old_dir = log_dir.replace("runs_8", "runs_7")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
-        old_dir = "runs_6/20240522-054727_Process-4"
+        #old_dir = "runs_6/20240522-054727_Process-4"
         discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
-        def weights_init(m):
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-
-        discriminator.apply(weights_init)
         print("Model loaded")
     except FileNotFoundError:
         print(f"Model not found at {old_dir}")
@@ -166,9 +159,9 @@ def train_model(training_params):
     test_writer = SummaryWriter(f"{log_dir}/test")
 
     # Save parameters to tensorboard
-    #progress_writer.add_text('Parameters',
-    #                         f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
-    #                         0)
+    progress_writer.add_text('Parameters',
+                             f"LEARNING_RATE: {LEARNING_RATE}, TILE_SIZE: {TILE_SIZE}, DEPTH_PADDING: {DEPTH_PADDING}, MIN_ENCODER_DIM: {MIN_ENCODER_DIM}, EPOCHS: {EPOCHS}, TRUE_BATCH_SIZE: {TRUE_BATCH_SIZE}, PIC_BATCH_SIZE: {PIC_BATCH_SIZE}, SAVE_MODEL: {SAVE_MODEL}, L1_LAMBDA: {L1_LAMBDA}, L2_LAMBDA: {L2_LAMBDA}",
+                             0)
 
     # Remove device from training_params
     training_params.pop('DEVICE', None)
