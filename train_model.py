@@ -249,8 +249,8 @@ def train_model(training_params):
                 disc_fake_outputs = discriminator(bf_channels, outputs)
 
             # Discriminator labels
-            disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)*1.0
-            disc_labels_fake = torch.ones_like(disc_fake_outputs).to(DEVICE)*0.0
+            disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)#*1.0
+            disc_labels_fake = torch.ones_like(disc_fake_outputs).to(DEVICE)#*0.0
 
             d_loss_real = d_loss_fn(disc_true_outputs, disc_labels_true)
             d_loss_fake = d_loss_fn(disc_fake_outputs, disc_labels_fake)
