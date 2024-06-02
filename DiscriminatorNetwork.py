@@ -65,3 +65,48 @@ class DiscriminatorNetwork(nn.Module):
         x = self.fc2(x)
 
         return F.sigmoid(x)
+
+class PatchGANDiscriminator(nn.Module):
+    def __init__(self, input_channels, ndf=64):
+        super(PatchGANDiscriminator, self).__init__()
+
+        # Define the convolutional layers
+        self.model = nn.Sequential(
+            # Input: (input_channels) x 128 x 128
+            nn.Conv2d(input_channels, ndf, kernel_size=4, stride=2, padding=1),  # (ndf) x 64 x 64
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Conv2d(ndf, ndf * 2, kernel_size=4, stride=2, padding=1),  # (ndf*2) x 32 x 32
+            nn.BatchNorm2d(ndf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Conv2d(ndf * 2, ndf * 4, kernel_size=4, stride=2, padding=1),  # (ndf*4) x 16 x 16
+            nn.BatchNorm2d(ndf * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Conv2d(ndf * 4, ndf * 8, kernel_size=4, stride=2, padding=1),  # (ndf*8) x 8 x 8
+            nn.BatchNorm2d(ndf * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Conv2d(ndf * 8, 1, kernel_size=4, stride=1, padding=1)  # (1) x 7 x 7
+        )
+
+    def forward(self, input):
+        return self.model(input)
+
+
+if __name__ == '__main__':
+    # Create a random input tensor
+    input = torch.randn(1, 7, 128, 128)
+
+    # Create an instance of the PatchGANDiscriminator
+    discriminator = PatchGANDiscriminator(input_channels=7)
+
+    # Perform a forward pass
+    output = discriminator(input)
+
+    # Print the output tensor
+    #print(output)
+
+    # Print the shape of the output tensor
+    print(output.shape)

@@ -9,7 +9,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from DiscriminatorNetwork import DiscriminatorNetwork
+from DiscriminatorNetwork import DiscriminatorNetwork, PatchGANDiscriminator
 from GeneratorNetwork import GeneratorNetwork, generate_full_test
 from dataset import custom_collate_fn
 from macro_scoring import get_macro_scores
@@ -64,6 +64,8 @@ def train_model(training_params):
         run_name = f"{time_stamp}_{process}"
 
     log_dir = f"runs_8/{run_name}"
+
+    PATCH = True
 
     LEARNING_RATE = float(training_params.get('LEARNING_RATE', 0.001))
     EPOCHS = int(training_params.get('EPOCHS', 10))
@@ -132,7 +134,11 @@ def train_model(training_params):
                                  image_size=TILE_SIZE,
                                  depth_padding=DEPTH_PADDING,
                                  min_encoding_dim=MIN_ENCODER_DIM)
-    discriminator = DiscriminatorNetwork(image_size=TILE_SIZE,
+
+    if PATCH:
+        discriminator = PatchGANDiscriminator(input_channels=2 + 1 + DEPTH_PADDING * 2)
+    else:
+        discriminator = DiscriminatorNetwork(image_size=TILE_SIZE,
                                          depth_padding=DEPTH_PADDING)
 
     generator.to(DEVICE)
@@ -147,7 +153,8 @@ def train_model(training_params):
         old_dir = log_dir.replace("runs_8", "runs_7")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
         #old_dir = "runs_6/20240522-054727_Process-4"
-        discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
+        if not PATCH:
+            discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         print("Model loaded")
     except FileNotFoundError:
         print(f"Model not found at {old_dir}")
