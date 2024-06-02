@@ -261,7 +261,7 @@ def train_model(training_params):
             print(f"Min: {min(d_grad_norms)}, Max: {max(d_grad_norms)}")
             print(f"Mean: {sum(d_grad_norms) / len(d_grad_norms)}")
 
-            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 0.000001)
+            torch.nn.utils.clip_grad_norm_(discriminator.parameters(), 0.1)
 
             d_optimizer.step()
 
@@ -279,6 +279,8 @@ def train_model(training_params):
             generator.zero_grad()
 
             g_loss.backward()
+
+            torch.nn.utils.clip_grad_norm_(generator.parameters(), 1.0)
             g_optimizer.step()
 
             # Display one pair of real and generated images
