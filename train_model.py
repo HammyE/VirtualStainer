@@ -278,7 +278,11 @@ def train_model(training_params):
 
             d_optimizer.step()
 
-            disc_fake_outputs = discriminator(bf_channels, outputs)
+            if PATCH:
+                disc_fake_inputs = torch.cat((bf_channels, outputs), dim=1)
+                disc_fake_outputs = discriminator(disc_fake_inputs)
+            else:
+                disc_fake_outputs = discriminator(bf_channels, outputs)
 
             l1_loss_real = torch.nn.L1Loss()(outputs, true_fluorescent)
             l2_loss_real = torch.nn.MSELoss()(outputs, true_fluorescent)
