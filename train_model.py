@@ -239,8 +239,14 @@ def train_model(training_params):
             print(f"Outputs min: {torch.min(outputs)}, Outputs max: {torch.max(outputs)}")
             print(f"True min: {torch.min(true_fluorescent)}, True max: {torch.max(true_fluorescent)}")
 
-            disc_true_outputs = discriminator(bf_channels, true_fluorescent)
-            disc_fake_outputs = discriminator(bf_channels, outputs)
+            if PATCH:
+                disc_true_inputs = torch.cat((bf_channels, true_fluorescent), dim=1)
+                disc_fake_inputs = torch.cat((bf_channels, outputs), dim=1)
+                disc_true_outputs = discriminator(disc_true_inputs)
+                disc_fake_outputs = discriminator(disc_fake_inputs)
+            else:
+                disc_true_outputs = discriminator(bf_channels, true_fluorescent)
+                disc_fake_outputs = discriminator(bf_channels, outputs)
 
             # Discriminator labels
             disc_labels_true = torch.ones_like(disc_true_outputs).to(DEVICE)*1.0
