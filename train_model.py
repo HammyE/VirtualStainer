@@ -63,7 +63,7 @@ def train_model(training_params):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
         run_name = f"{time_stamp}_{process}"
 
-    log_dir = f"runs_8/{run_name}"
+    log_dir = f"runs_9/{run_name}"
 
     PATCH = True
 
@@ -150,11 +150,10 @@ def train_model(training_params):
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=D_LR)
 
     try:
-        old_dir = log_dir.replace("runs_8", "runs_7")
+        old_dir = log_dir.replace("runs_9", "runs_8")
         generator.load_state_dict(torch.load(f"{old_dir}/generator.pt", map_location=DEVICE))
         #old_dir = "runs_6/20240522-054727_Process-4"
-        if not PATCH:
-            discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
+        discriminator.load_state_dict(torch.load(f"{old_dir}/discriminator.pt", map_location=DEVICE))
         print("Model loaded")
     except FileNotFoundError:
         print(f"Model not found at {old_dir}")
