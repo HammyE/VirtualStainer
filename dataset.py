@@ -772,8 +772,6 @@ class HarmonyDataset(Dataset):
                 tiles, _, _, active_tiles = self.tile_transform(bf_img, mask, active_tiles)
 
                 if n_tiles == 1:
-                    print("n_tiles == 1")
-                    print(f"Tiles: {len(tiles)}")
                     n_tiles = len(tiles)
                     x = torch.zeros((n_tiles * self.depth_range, 5, self.tile_size, self.tile_size))
                     x_i = torch.zeros((n_tiles, 5, self.tile_size, self.tile_size))
