@@ -276,7 +276,7 @@ if __name__ == '__main__':
                 generated_fluorescent = generator(bf_channels)
 
 
-                if batch_idx == 0:
+                if batch_idx == -1:
                     for img_idx in range(4):
                         input_1 = bf_channels[img_idx]
                         output_1 = generated_fluorescent[img_idx]
@@ -299,8 +299,6 @@ if __name__ == '__main__':
                         plt.subplot(4, 4, 4 * img_idx + 4)
                         plt.imshow(true_f[1].cpu().numpy(), cmap='Oranges')
                         plt.axis('off')
-
-
                     plt.show()
 
                 print(f"Generated fluorescent max: {torch.max(generated_fluorescent)}")
@@ -310,15 +308,26 @@ if __name__ == '__main__':
                 max_i = torch.max(torch.tensor([max_i, torch.max(generated_fluorescent)]))
                 full_ssim += ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0, 1.0)) * bf_channels.shape[0]
 
-                live_mse += torch.nn.functional.mse_loss(generated_fluorescent[:, 1], true_fluorescent[:, 1]) * bf_channels.shape[0]
-                live_mae += torch.nn.functional.l1_loss(generated_fluorescent[:, 1], true_fluorescent[:, 1]) * bf_channels.shape[0]
-                live_max_i = torch.max(torch.tensor([live_max_i, torch.max(generated_fluorescent[:, 1])]))
-                live_ssim += ssim(preds=generated_fluorescent[:, 1], target=true_fluorescent[:, 1], data_range=(0.0, 1.0)) * bf_channels.shape[0]
+                live_pred = generated_fluorescent[:, 1]
+                dead_pred = generated_fluorescent[:, 0]
+                live_target = true_fluorescent[:, 1]
+                dead_target = true_fluorescent[:, 0]
 
-                dead_mse += torch.nn.functional.mse_loss(generated_fluorescent[:, 0], true_fluorescent[:, 0]) * bf_channels.shape[0]
-                dead_mae += torch.nn.functional.l1_loss(generated_fluorescent[:, 0], true_fluorescent[:, 0]) * bf_channels.shape[0]
-                dead_max_i = torch.max(torch.tensor([dead_max_i, torch.max(generated_fluorescent[:, 0])]))
-                dead_ssim += ssim(preds=generated_fluorescent[:, 0], target=true_fluorescent[:, 0], data_range=(0.0, 1.0)) * bf_channels.shape[0]
+
+                live_pred = live_pred.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
+                dead_pred = dead_pred.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
+                live_target = live_target.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
+                dead_target = dead_target.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
+
+                live_mse += torch.nn.functional.mse_loss(live_pred, live_target) * bf_channels.shape[0]
+                live_mae += torch.nn.functional.l1_loss(live_pred, live_target) * bf_channels.shape[0]
+                live_max_i = torch.max(torch.tensor([live_max_i, torch.max(live_pred)]))
+                live_ssim += ssim(preds=live_pred, target=live_target, data_range=(0.0, 1.0)) * bf_channels.shape[0]
+
+                dead_mse += torch.nn.functional.mse_loss(dead_pred, dead_target) * bf_channels.shape[0]
+                dead_mae += torch.nn.functional.l1_loss(dead_pred, dead_target) * bf_channels.shape[0]
+                dead_max_i = torch.max(torch.tensor([dead_max_i, torch.max(dead_pred)]))
+                dead_ssim += ssim(preds=dead_pred, target=dead_target, data_range=(0.0, 1.0)) * bf_channels.shape[0]
 
 
                 print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
