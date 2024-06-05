@@ -91,8 +91,8 @@ if __name__ == '__main__':
     TILE_SIZE = 128
     DEPTH_PADDING = 2
     OVERLAP = TILE_SIZE // 4
-    PIC_BATCH_SIZE = 4
-    BATCH_SIZE = 4
+    PIC_BATCH_SIZE = 2
+    BATCH_SIZE = 26
     EPOCHS = 0
     LEARNING_RATE = 0.002
     MIN_ENCODER_DIM = 16
