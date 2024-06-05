@@ -313,11 +313,13 @@ if __name__ == '__main__':
                 live_target = true_fluorescent[:, 1]
                 dead_target = true_fluorescent[:, 0]
 
+                current_batch_size = bf_channels.shape[0]
 
-                live_pred = live_pred.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
-                dead_pred = dead_pred.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
-                live_target = live_target.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
-                dead_target = dead_target.reshape(TRUE_BATCH_SIZE, 1, TILE_SIZE, TILE_SIZE)
+
+                live_pred = live_pred.reshape(current_batch_size, 1, TILE_SIZE, TILE_SIZE)
+                dead_pred = dead_pred.reshape(current_batch_size, 1, TILE_SIZE, TILE_SIZE)
+                live_target = live_target.reshape(current_batch_size, 1, TILE_SIZE, TILE_SIZE)
+                dead_target = dead_target.reshape(current_batch_size, 1, TILE_SIZE, TILE_SIZE)
 
                 live_mse += torch.nn.functional.mse_loss(live_pred, live_target) * bf_channels.shape[0]
                 live_mae += torch.nn.functional.l1_loss(live_pred, live_target) * bf_channels.shape[0]
