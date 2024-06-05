@@ -226,15 +226,15 @@ if __name__ == '__main__':
 
         generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available(), debug=False)
 
-        full_mse_dead, full_mse_live, full_mae_dead, full_mae_live, full_ssim_dead, full_ssim_live, PSNR_dead, PSNR_live, n_wells = get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=3)
+        full_mse_dead, full_mse_live, full_mse, full_mae_dead, full_mae_live, full_mae, full_ssim_dead, full_ssim_live, full_ssim, PSNR_dead, PSNR_live, PSNR, n_wells = get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=3)
 
 
         # Save the data
         with open(result_path, 'w') as f:
-            f.write(f"Measure,Dead,Live\n")
-            f.write(f"MSE,{full_mse_dead},{full_mse_live}\n")
-            f.write(f"MAE,{full_mae_dead},{full_mae_live}\n")
-            f.write(f"SSIM,{full_ssim_dead},{full_ssim_live}\n")
-            f.write(f"PSNR,{PSNR_dead},{PSNR_live}\n")
+            f.write(f"Measure,Dead,Live,Combined\n")
+            f.write(f"MSE,{full_mse_dead},{full_mse_live},{full_mse}\n")
+            f.write(f"MAE,{full_mae_dead},{full_mae_live},{full_mae}\n")
+            f.write(f"SSIM,{full_ssim_dead},{full_ssim_live},{full_ssim}\n")
+            f.write(f"PSNR,{PSNR_dead},{PSNR_live},{PSNR}\n")
             f.write(f"Model path,{model_path}\n")
             f.write(f"n wells,{n_wells}\n")

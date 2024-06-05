@@ -332,7 +332,7 @@ if __name__ == '__main__':
 
                 print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
                 print(f"MAE: {torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent)}")
-                print(f"Size: {bf_channels.shape[0]} / {len(dataset)}")
+                print(f"Images: {bf_channels.shape[0]*batch_idx} / {len(dataset)}")
                 # print(f"SSIM: {ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0,1.0))}")
 
 

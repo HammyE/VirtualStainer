@@ -375,7 +375,7 @@ def train_model(training_params):
                         print(f"Time taken for inference: {round(time.time() - infer_start_time, 2)} seconds")
                         print(f"Calculating macro scores...")
                         macro_start_time = time.time()
-                        full_mse_dead, full_mse_live, full_mae_dead, full_mae_live, full_ssim_dead, full_ssim_live, PSNR_dead, PSNR_live, n_wells = get_macro_scores(dataset, TILE_SIZE, TILE_SIZE//4, DEVICE, generator, subset=4)
+                        full_mse_dead, full_mse_live, full_mse, full_mae_dead, full_mae_live, full_mae, full_ssim_dead, full_ssim_live, full_ssim, PSNR_dead, PSNR_live, PSNR, n_wells = get_macro_scores(dataset, TILE_SIZE, TILE_SIZE//4, DEVICE, generator, subset=4)
                         progress_writer.add_scalar('Full MSE Dead', full_mse_dead, logging_steps)
                         progress_writer.add_scalar('Full MSE Live', full_mse_live, logging_steps)
                         progress_writer.add_scalar('Full MAE Dead', full_mae_dead, logging_steps)
