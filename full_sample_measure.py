@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
         generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available(), debug=False)
 
-        full_mse_dead, full_mse_live, full_mse, full_mae_dead, full_mae_live, full_mae, full_ssim_dead, full_ssim_live, full_ssim, PSNR_dead, PSNR_live, PSNR, n_wells = get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=3)
+        full_mse_dead, full_mse_live, full_mse, full_mae_dead, full_mae_live, full_mae, full_ssim_dead, full_ssim_live, full_ssim, PSNR_dead, PSNR_live, PSNR, n_wells = get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator)
 
 
         # Save the data
