@@ -166,10 +166,8 @@ if __name__ == '__main__':
         transform=transform,
         depth_padding=DEPTH_PADDING,
         picture_batch_size=PIC_BATCH_SIZE,
-        depth_range=20,
         every_nth=2,
-        start_nth=0,
-        disallowed_datasets=disallowed_datasets
+        start_nth=1,
     )
 
     print("Dataset loaded with length: ", len(dataset))
@@ -207,12 +205,7 @@ if __name__ == '__main__':
 
     # load model
 
-    model_path = 'runs/20240417-000820_Process-5'
-    # model_path = "runs/20240417-145502_Process-5"
-
-    model_paths = """20240423-065313_Process-4
-20240423-115255_Process-4
-20240423-165649_Process-5""".split('\n')
+    model_paths = """runs_10/20240522-054727_Process-4""".split('\n')
 
     if not os.path.exists('results'):
         os.mkdir('results')
@@ -241,7 +234,19 @@ if __name__ == '__main__':
         full_mse = 0
         full_mae = 0
         max_i = 0
+        full_ssim = 0
         ssim = structural_similarity_index_measure
+
+        live_mse = 0
+        live_mae = 0
+        live_ssim = 0
+        live_max_i = 0
+
+        dead_mse = 0
+        dead_mae = 0
+        dead_ssim = 0
+        dead_max_i = 0
+
 
 
 
@@ -298,18 +303,23 @@ if __name__ == '__main__':
 
                     plt.show()
 
-
-
-                # print(f"Generated fluorescent shape: {generated_fluorescent.shape}")
-                # print(f"True fluorescent shape: {true_fluorescent.shape}")
-                # print(f"Brightfield shape: {bf_channels.shape}")
-
                 print(f"Generated fluorescent max: {torch.max(generated_fluorescent)}")
 
                 full_mse += torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
                 full_mae += torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent) * bf_channels.shape[0]
                 max_i = torch.max(torch.tensor([max_i, torch.max(generated_fluorescent)]))
-                full_ssim = ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0, 1.0)) * bf_channels.shape[0]
+                full_ssim += ssim(preds=generated_fluorescent, target=true_fluorescent, data_range=(0.0, 1.0)) * bf_channels.shape[0]
+
+                live_mse += torch.nn.functional.mse_loss(generated_fluorescent[:, 1], true_fluorescent[:, 1]) * bf_channels.shape[0]
+                live_mae += torch.nn.functional.l1_loss(generated_fluorescent[:, 1], true_fluorescent[:, 1]) * bf_channels.shape[0]
+                live_max_i = torch.max(torch.tensor([live_max_i, torch.max(generated_fluorescent[:, 1])]))
+                live_ssim += ssim(preds=generated_fluorescent[:, 1], target=true_fluorescent[:, 1], data_range=(0.0, 1.0)) * bf_channels.shape[0]
+
+                dead_mse += torch.nn.functional.mse_loss(generated_fluorescent[:, 0], true_fluorescent[:, 0]) * bf_channels.shape[0]
+                dead_mae += torch.nn.functional.l1_loss(generated_fluorescent[:, 0], true_fluorescent[:, 0]) * bf_channels.shape[0]
+                dead_max_i = torch.max(torch.tensor([dead_max_i, torch.max(generated_fluorescent[:, 0])]))
+                dead_ssim += ssim(preds=generated_fluorescent[:, 0], target=true_fluorescent[:, 0], data_range=(0.0, 1.0)) * bf_channels.shape[0]
+
 
                 print(f"MSE: {torch.nn.functional.mse_loss(generated_fluorescent, true_fluorescent)}")
                 print(f"MAE: {torch.nn.functional.l1_loss(generated_fluorescent, true_fluorescent)}")
@@ -321,6 +331,16 @@ if __name__ == '__main__':
             mae = full_mae / len(dataset)
             ssim = full_ssim / len(dataset)
             PSNR = 20 * torch.log10(max_i) - 10 * torch.log10(torch.tensor(mse))
+
+            live_mse = live_mse / len(dataset)
+            live_mae = live_mae / len(dataset)
+            live_ssim = live_ssim / len(dataset)
+            live_PSNR = 20 * torch.log10(live_max_i) - 10 * torch.log10(torch.tensor(live_mse))
+
+            dead_mse = dead_mse / len(dataset)
+            dead_mae = dead_mae / len(dataset)
+            dead_ssim = dead_ssim / len(dataset)
+            dead_PSNR = 20 * torch.log10(dead_max_i) - 10 * torch.log10(torch.tensor(dead_mse))
 
             print(f"Full MSE: {mse}")
             print(f"Full MAE: {mae}")
@@ -334,5 +354,13 @@ if __name__ == '__main__':
                 f.write(f"MAE,{mae}\n")
                 f.write(f"SSIM,{ssim}\n")
                 f.write(f"PSNR,{PSNR}\n")
+                f.write(f"Live MSE,{live_mse}\n")
+                f.write(f"Live MAE,{live_mae}\n")
+                f.write(f"Live SSIM,{live_ssim}\n")
+                f.write(f"Live PSNR,{live_PSNR}\n")
+                f.write(f"Dead MSE,{dead_mse}\n")
+                f.write(f"Dead MAE,{dead_mae}\n")
+                f.write(f"Dead SSIM,{dead_ssim}\n")
+                f.write(f"Dead PSNR,{dead_PSNR}\n")
                 f.write(f"Model path,{model_path}\n")
                 f.write(f"n images,{len(dataset)}\n")
