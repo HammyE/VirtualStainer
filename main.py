@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
     # load model
 
-    model_paths = """runs_10/20240522-054727_Process-4""".split('\n')
+    model_paths = """20240522-054727_Process-4""".split('\n')
 
     if not os.path.exists('results'):
         os.mkdir('results')
@@ -218,7 +218,7 @@ if __name__ == '__main__':
 
         img_path = f'results/{model_path}/images'
         result_path = f'results/{model_path}/data.csv'
-        model_path = f'runs_3/{model_path}'
+        model_path = f'runs_10/{model_path}'
 
         generator = GeneratorNetwork(out_channels=2, image_size=TILE_SIZE, depth_padding=DEPTH_PADDING,
                                      min_encoding_dim=MIN_ENCODER_DIM).to(DEVICE)

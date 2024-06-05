@@ -200,12 +200,7 @@ if __name__ == '__main__':
 
     # load model
 
-    model_path = 'runs/20240417-000820_Process-5'
-    # model_path = "runs/20240417-145502_Process-5"
-
-    model_paths = """20240423-065313_Process-4
-20240423-115255_Process-4
-20240423-165649_Process-5""".split('\n')
+    model_paths = """20240522-054727_Process-4""".split('\n')
 
     if not os.path.exists('results_mip'):
         os.mkdir('results_mip')
@@ -218,7 +213,7 @@ if __name__ == '__main__':
 
         img_path = f'results_mip/{model_path}/images'
         result_path = f'results_mip/{model_path}/data.csv'
-        model_path = f'runs_3/{model_path}'
+        model_path = f'runs_10/{model_path}'
 
         generator = GeneratorNetwork(out_channels=2, image_size=TILE_SIZE, depth_padding=DEPTH_PADDING,
                                      min_encoding_dim=MIN_ENCODER_DIM).to(DEVICE)
