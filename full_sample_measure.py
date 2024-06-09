@@ -236,7 +236,7 @@ if __name__ == '__main__':
                 display=False,
                 well=well)
 
-             img = PIL.Image.fromarray(buf)
+             img = PIL.Image(buffer=buf)
              img.save(f"{img_path}/{well}.png")
 
         input("Press Enter to continue...")
