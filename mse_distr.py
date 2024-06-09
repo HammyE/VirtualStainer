@@ -29,7 +29,7 @@ def extract_all_datapoints(tensorboard_log_dir):
 
 data = extract_all_datapoints("runs_10/20240522-054727_Process-4/progress")
 
-root = "runs_4"
+root = "runs_10"
 
 master_data = {}
 
@@ -41,13 +41,13 @@ for run in os.listdir(root):
 
 for measure in master_data[run].keys():
     print(master_data.keys())
-    plt.figure()
+    plt.figure(figsize=(10, 5))
     for run in master_data.keys():
         data = master_data[run]
         rolling_variance = pd.Series([value for _, value in data[measure]]).rolling(window=40).var()
         plt.plot(rolling_variance, label=run)
     plt.title(f"{measure} Variance")
-    plt.legend()
+    #plt.legend()
     plt.savefig(f"{root}/{measure}_variance.png")
 
 
