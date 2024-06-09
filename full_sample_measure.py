@@ -226,18 +226,30 @@ if __name__ == '__main__':
 
         generate_full_test(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, display=not torch.cuda.is_available(), debug=False)
 
-        for well in dataset.wells:
-             buf = generate_full_test(
+        n_wells = len(dataset.wells)
+        start = time.time()
+
+        for well_idx, well in enumerate(dataset.wells):
+            print(f"Well {well_idx}/{n_wells}")
+            print(f"Percents: {round(well_idx / n_wells * 100)}%")
+            elapsed = time.time() - start
+            left = (time.time() - start) / (well_idx + 1) * (n_wells - well_idx)
+            print(f"Time elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))}")
+            print(f"Time left: {time.strftime('%H:%M:%S', time.gmtime(left))}")
+
+            buf = generate_full_test(
                 dataset,
                 TILE_SIZE,
                 OVERLAP,
                 DEVICE,
                 generator,
                 display=False,
-                well=well)
+                well=well
+            )
 
-             img = PIL.Image(buffer=buf)
-             img.save(f"{img_path}/{well}.png")
+            # Save the image
+            img = PIL.Image.open(buf)
+            img.save(f"{img_path}/{well}.png")
 
         input("Press Enter to continue...")
 
