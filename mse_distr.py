@@ -29,7 +29,7 @@ def extract_all_datapoints(tensorboard_log_dir):
 
 data = extract_all_datapoints("runs_10/20240522-054727_Process-4/progress")
 
-root = "runs_10"
+root = "runs_4"
 
 master_data = {}
 
