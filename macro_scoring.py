@@ -25,6 +25,8 @@ def get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=None
 
     wells = dataset.wells
 
+    four_images = []
+
     if subset is not None:
         wells = np.random.choice(wells, subset)
 
@@ -56,6 +58,38 @@ def get_macro_scores(dataset, TILE_SIZE, OVERLAP, DEVICE, generator, subset=None
                 well=well,
                 return_images=True,
             )
+
+            four_images.append((bf, dead, live, bf_real, dead_real, live_real))
+
+            plt.savefig
+
+
+
+            if well_idx == 3:
+                plt.figure(figsize=(10, 10))
+                plt.subplot(4,4,1)
+                plt.title("Generated")
+                plt.subplot(4,4,2)
+                plt.title("Real")
+                plt.subplot(4,4,3)
+                plt.title("Generated")
+                plt.subplot(4,4,4)
+                plt.title("Real")
+                for i in range(4):
+                    plt.subplot(4, 4, i*4 + 1)
+                    plt.imshow(four_images[i][1], cmap='Greens')
+                    plt.axis('off')
+                    plt.subplot(4, 4, i*4 + 2)
+                    plt.imshow(four_images[i][4], cmap='Greens')
+                    plt.axis('off')
+                    plt.subplot(4, 4, i*4 + 3)
+                    plt.imshow(four_images[i][2], cmap='Oranges')
+                    plt.axis('off')
+                    plt.subplot(4, 4, i*4 + 4)
+                    plt.imshow(four_images[i][5], cmap='Oranges')
+                    plt.axis('off')
+
+                plt.show()
 
             # plt.imshow(bf, cmap='gray')
             # plt.axis('off')
